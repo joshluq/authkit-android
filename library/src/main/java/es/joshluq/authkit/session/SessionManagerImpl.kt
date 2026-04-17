@@ -1,17 +1,14 @@
 package es.joshluq.authkit.session
 
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import es.joshluq.authkit.session.model.SessionInfo
 import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.authkit.session.storage.SessionStorage
-import es.joshluq.authkit.session.worker.SessionExpirationWorker
+import es.joshluq.authkit.session.worker.SessionWorkerManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,7 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class SessionManagerImpl<T> @Inject constructor(
     private val storage: SessionStorage,
-    private val workManager: WorkManager
+    private val workerManager: SessionWorkerManager
 ) : SessionManager<T> {
 
     private val mutex = Mutex()
@@ -34,7 +31,7 @@ class SessionManagerImpl<T> @Inject constructor(
             _state.value = SessionState.Active(SessionInfo(tokens, info))
             
             expirationMillis?.let {
-                scheduleExpiration(it)
+                workerManager.scheduleExpiration(it)
             }
         }
     }
@@ -52,7 +49,7 @@ class SessionManagerImpl<T> @Inject constructor(
     override suspend fun endSession() {
         mutex.withLock {
             storage.clear()
-            cancelExpiration()
+            workerManager.cancelExpiration()
             _state.value = SessionState.Idle
         }
     }
@@ -61,22 +58,5 @@ class SessionManagerImpl<T> @Inject constructor(
         mutex.withLock {
             _state.value = SessionState.Expired
         }
-    }
-
-    private fun scheduleExpiration(delayMillis: Long) {
-        val expirationRequest = OneTimeWorkRequestBuilder<SessionExpirationWorker>()
-            .setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)
-            .addTag(EXPIRATION_WORK_TAG)
-            .build()
-
-        workManager.enqueue(expirationRequest)
-    }
-
-    private fun cancelExpiration() {
-        workManager.cancelAllWorkByTag(EXPIRATION_WORK_TAG)
-    }
-
-    companion object {
-        private const val EXPIRATION_WORK_TAG = "session_expiration_work"
     }
 }

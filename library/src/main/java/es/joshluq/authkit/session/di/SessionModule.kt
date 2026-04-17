@@ -12,6 +12,8 @@ import es.joshluq.authkit.session.SessionManager
 import es.joshluq.authkit.session.SessionManagerImpl
 import es.joshluq.authkit.session.storage.SessionStorage
 import es.joshluq.authkit.session.storage.SessionStorageImpl
+import es.joshluq.authkit.session.worker.SessionWorkerManager
+import es.joshluq.authkit.session.worker.SessionWorkerManagerImpl
 import javax.inject.Singleton
 
 @Module
@@ -25,6 +27,10 @@ abstract class SessionModule {
     @Binds
     @Singleton
     abstract fun bindSessionManager(impl: SessionManagerImpl<Any>): SessionManager<Any>
+
+    @Binds
+    @Singleton
+    abstract fun bindSessionWorkerManager(impl: SessionWorkerManagerImpl): SessionWorkerManager
 
     companion object {
         @Provides
