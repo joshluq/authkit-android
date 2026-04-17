@@ -9,18 +9,19 @@ import dagger.assisted.AssistedInject
 import es.joshluq.authkit.session.SessionManager
 
 /**
- * Worker responsible for notifying the SessionManager about expiration.
+ * Worker responsible for notifying the SessionManager about upcoming expiration.
  */
 @HiltWorker
-class SessionExpirationWorker @AssistedInject constructor(
+class SessionPreExpirationWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
     private val sessionManager: SessionManager<Any>
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
-        // Notification only, SessionManager handles the storage.clear()
-        sessionManager.markAsExpired()
+        // Notify the SessionManager about the warning
+        sessionManager.emitWarning()
+
         return Result.success()
     }
 }

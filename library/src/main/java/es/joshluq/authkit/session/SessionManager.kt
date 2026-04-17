@@ -1,6 +1,8 @@
 package es.joshluq.authkit.session
 
 import es.joshluq.authkit.session.model.SessionState
+import es.joshluq.authkit.session.model.SessionTimerConfiguration
+import es.joshluq.authkit.session.model.SessionTimerDefaults
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -15,18 +17,22 @@ interface SessionManager<T> {
     val state: StateFlow<SessionState<T>>
 
     /**
+     * Adds a timer configuration for session expiration and warning.
+     */
+    fun addTimerConfiguration(configuration: SessionTimerConfiguration = SessionTimerDefaults.Default)
+
+    /**
      * Starts a new session with the provided tokens and information.
      *
      * @param tokens Map of tokens to be stored.
      * @param info Additional user information.
-     * @param expirationMillis Optional expiration time in milliseconds.
      */
-    suspend fun startSession(tokens: Map<String, String>, info: T, expirationMillis: Long? = null)
+    suspend fun startSession(tokens: Map<String, String>, info: T)
 
     /**
-     * Updates the current session tokens.
+     * Extends the current session with new tokens.
      */
-    suspend fun updateTokens(tokens: Map<String, String>)
+    suspend fun extendSession(newTokens: Map<String, String>)
 
     /**
      * Ends the current session and clears persisted data.
@@ -34,7 +40,12 @@ interface SessionManager<T> {
     suspend fun endSession()
 
     /**
-     * Marks the session as expired.
+     * Emits a warning that the session is about to expire.
+     */
+    suspend fun emitWarning()
+
+    /**
+     * Marks the session as expired and clears data.
      */
     suspend fun markAsExpired()
 }

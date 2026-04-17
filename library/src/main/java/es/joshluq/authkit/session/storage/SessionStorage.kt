@@ -1,7 +1,5 @@
 package es.joshluq.authkit.session.storage
 
-import es.joshluq.authkit.session.model.Session
-
 /**
  * Agnostic encryption provider to delegate sensitive data handling.
  */

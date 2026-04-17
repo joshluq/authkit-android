@@ -2,8 +2,8 @@ package es.joshluq.authkit.session.storage
 
 import android.content.Context
 import android.content.SharedPreferences
-import javax.inject.Inject
 import androidx.core.content.edit
+import javax.inject.Inject
 
 /**
  * Implementation of [SessionStorage] that persists tokens in SharedPreferences.
