@@ -3,6 +3,7 @@ import com.android.build.api.dsl.LibraryExtension
 plugins {
     alias(libs.plugins.pluginkit.android.library)
     alias(libs.plugins.pluginkit.android.hilt)
+    alias(libs.plugins.pluginkit.android.work)
     alias(libs.plugins.pluginkit.quality)
     alias(libs.plugins.pluginkit.android.testing)
     alias(libs.plugins.pluginkit.android.publishing)
@@ -15,9 +16,6 @@ configure<LibraryExtension> {
     namespace = "es.joshluq.authkit"
 }
 
-dependencies {
-
-}
 
 pluginkitQuality {
     sonarHost = "https://sonarcloud.io"
