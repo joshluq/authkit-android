@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.pluginkit.android.library) apply false
     alias(libs.plugins.pluginkit.android.compose) apply false
     alias(libs.plugins.pluginkit.android.hilt) apply false
+    alias(libs.plugins.pluginkit.android.work) apply false
     alias(libs.plugins.pluginkit.android.navigation) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.pluginkit.quality) apply false
