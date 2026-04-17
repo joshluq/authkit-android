@@ -3,6 +3,7 @@ package es.joshluq.authkit.session.storage
 import android.content.Context
 import android.content.SharedPreferences
 import javax.inject.Inject
+import androidx.core.content.edit
 
 /**
  * Implementation of [SessionStorage] that persists tokens in SharedPreferences.
@@ -16,12 +17,12 @@ class SessionStorageImpl @Inject constructor(
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     override suspend fun saveTokens(tokens: Map<String, String>) {
-        prefs.edit().apply {
+        prefs.edit {
             tokens.forEach { (key, value) ->
                 val encryptedValue = encryptionProvider.encrypt(key, value)
                 putString(key, encryptedValue)
             }
-        }.apply()
+        }
     }
 
     override suspend fun getTokens(): Map<String, String> {
@@ -40,7 +41,7 @@ class SessionStorageImpl @Inject constructor(
     }
 
     override suspend fun clear() {
-        prefs.edit().clear().apply()
+        prefs.edit { clear() }
     }
 
     companion object {
