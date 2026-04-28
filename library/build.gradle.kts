@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.pluginkit.quality)
     alias(libs.plugins.pluginkit.android.testing)
     alias(libs.plugins.pluginkit.android.publishing)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 group = providers.gradleProperty("groupId").get()
@@ -16,6 +17,11 @@ configure<LibraryExtension> {
     namespace = "es.joshluq.authkit"
 }
 
+dependencies {
+    implementation("es.joshluq.kit:foundationkit:1.1.0")
+    implementation("es.joshluq.kit:encryptionkit:1.1.0")
+    implementation(libs.kotlinx.serialization.json)
+}
 
 pluginkitQuality {
     sonarHost = "https://sonarcloud.io"
