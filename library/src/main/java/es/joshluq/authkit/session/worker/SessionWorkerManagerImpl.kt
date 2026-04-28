@@ -4,33 +4,36 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class SessionWorkerManagerImpl @Inject constructor(
+class SessionWorkerManagerImpl(
     private val workManager: WorkManager
 ) : SessionWorkerManager {
 
-    override fun scheduleExpirationWithWarning(totalDuration: Long, warningBefore: Long) {
-        val warningDelay = totalDuration - warningBefore
-
-        val warningRequest = OneTimeWorkRequestBuilder<SessionPreExpirationWorker>()
-            .setInitialDelay(warningDelay, TimeUnit.MILLISECONDS)
-            .addTag(EXPIRATION_WORK_TAG)
-            .build()
-
+    override fun scheduleExpirationWithWarning(totalDuration: Long, warningBefore: Long?) {
         val expirationRequest = OneTimeWorkRequestBuilder<SessionExpirationWorker>()
             .setInitialDelay(totalDuration, TimeUnit.MILLISECONDS)
             .addTag(EXPIRATION_WORK_TAG)
             .build()
 
-        // Use unique work to ensure only one session expiration cycle is active at a time
-        workManager.beginUniqueWork(
-            UNIQUE_WORK_NAME,
-            ExistingWorkPolicy.REPLACE,
-            warningRequest
-        ).then(expirationRequest).enqueue()
+        if (warningBefore != null) {
+            val warningDelay = totalDuration - warningBefore
+            val warningRequest = OneTimeWorkRequestBuilder<SessionPreExpirationWorker>()
+                .setInitialDelay(warningDelay, TimeUnit.MILLISECONDS)
+                .addTag(EXPIRATION_WORK_TAG)
+                .build()
+
+            workManager.beginUniqueWork(
+                UNIQUE_WORK_NAME,
+                ExistingWorkPolicy.REPLACE,
+                warningRequest
+            ).then(expirationRequest).enqueue()
+        } else {
+            workManager.enqueueUniqueWork(
+                UNIQUE_WORK_NAME,
+                ExistingWorkPolicy.REPLACE,
+                expirationRequest
+            )
+        }
     }
 
     override fun cancelExpiration() {
