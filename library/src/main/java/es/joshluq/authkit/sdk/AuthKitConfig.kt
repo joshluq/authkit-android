@@ -5,14 +5,13 @@ import es.joshluq.authkit.di.AuthKitDefaults
 import es.joshluq.authkit.session.sdk.SessionKitConfig
 import es.joshluq.foundationkit.log.Loggerkit
 import es.joshluq.foundationkit.manager.ManagerConfig
-import es.joshluq.foundationkit.provider.SerializerProvider
 
 data class AuthKitConfig(
     val context: Context,
     val sessionConfig: SessionKitConfig,
     val storeName: String,
     val logger: Loggerkit
-    ) : ManagerConfig {
+) : ManagerConfig {
 
     /**
      * Builder class for [AuthKitConfig].
@@ -20,7 +19,7 @@ data class AuthKitConfig(
     class Builder {
 
         var context: Context? = null
-        var sessionConfig : SessionKitConfig? = null
+        var sessionConfig: SessionKitConfig? = null
         var storeName: String = "auth_kit_store"
         var logger: Loggerkit = AuthKitDefaults.logger
 
@@ -32,13 +31,16 @@ data class AuthKitConfig(
         )
 
         companion object {
-            inline fun build(context: Context, sessionKitConfig: SessionKitConfig, block: Builder.() -> Unit): AuthKitConfig {
+            inline fun build(
+                context: Context,
+                sessionKitConfig: SessionKitConfig,
+                block: Builder.() -> Unit
+            ): AuthKitConfig {
                 return Builder().apply {
                     this.context = context
                     this.sessionConfig = sessionKitConfig
                 }.apply(block).build()
             }
         }
-
     }
 }

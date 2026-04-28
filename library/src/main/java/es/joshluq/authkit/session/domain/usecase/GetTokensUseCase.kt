@@ -5,7 +5,6 @@ import es.joshluq.authkit.session.model.TokenHolder
 import es.joshluq.foundationkit.log.Loggerkit
 import es.joshluq.foundationkit.usecase.NoneInput
 import es.joshluq.foundationkit.usecase.UseCase
-import es.joshluq.foundationkit.usecase.UseCaseInput
 import es.joshluq.foundationkit.usecase.UseCaseOutput
 
 internal class GetTokensUseCase(

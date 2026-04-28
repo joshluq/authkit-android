@@ -1,10 +1,10 @@
 package es.joshluq.authkit.session.model
 
-data class TokenHolder (
+data class TokenHolder(
     private val tokens: MutableMap<String, Token>
 ) {
 
-    fun addToken(token: Token){
+    fun addToken(token: Token) {
         val key = when (token) {
             is Token.Access -> "access"
             is Token.Refresh -> "refresh"
@@ -20,5 +20,4 @@ data class TokenHolder (
     fun hasRefreshToken(): Boolean = tokens.containsKey("refresh")
 
     fun hasCustomToken(name: String): Boolean = tokens.containsKey(name)
-
 }

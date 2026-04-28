@@ -25,9 +25,9 @@ internal class SessionKitComponent(
 ) {
 
     val tokenRepository by lazy {
-        when(config.persistence){
+        when (config.persistence) {
             PersistencePolicy.Persistent -> TokenRepositoryImpl(persistentStorage, logger)
-            PersistencePolicy.Transient ->  TokenRepositoryImpl(transientStorage, logger)
+            PersistencePolicy.Transient -> TokenRepositoryImpl(transientStorage, logger)
         }
     }
 

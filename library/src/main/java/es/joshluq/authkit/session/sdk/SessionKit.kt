@@ -23,7 +23,7 @@ import kotlinx.coroutines.sync.withLock
 class SessionKit internal constructor(
     config: SessionKitConfig,
     private val componentFactory: ComponentFactory = SessionKitDefaults.factory
-): Manager<SessionKitConfig>(){
+) : Manager<SessionKitConfig>() {
 
     companion object {
         private const val TAG = "SessionKit"
@@ -61,8 +61,8 @@ class SessionKit internal constructor(
         }
     }
 
-    private fun startTimerIfNeeded(){
-        when(val timerConfig = config.expiration){
+    private fun startTimerIfNeeded() {
+        when (val timerConfig = config.expiration) {
             ExpirationPolicy.Never -> Unit
             is ExpirationPolicy.Timed -> {
                 component.logger.i(TAG, "Start Timer with duration: ${timerConfig.durationMillis}ms")
@@ -84,11 +84,11 @@ class SessionKit internal constructor(
         }
     }
 
-    private fun endTimerIfNeeded(){
-        when(config.expiration){
+    private fun endTimerIfNeeded() {
+        when (config.expiration) {
             ExpirationPolicy.Never -> Unit
             is ExpirationPolicy.Timed -> {
-                component.logger.i(TAG,"Stop Timer")
+                component.logger.i(TAG, "Stop Timer")
                 component.sessionWorker.cancelExpiration()
             }
         }
@@ -96,7 +96,7 @@ class SessionKit internal constructor(
 
     suspend fun extendSession(tokens: TokenHolder) {
         mutex.withLock {
-            if(state.value != SessionState.Active){
+            if (state.value != SessionState.Active) {
                 component.logger.i(TAG, "Cannot extend session: current state is ${state.value}")
                 return
             }
@@ -122,7 +122,6 @@ class SessionKit internal constructor(
      * Factory for creating workers. Used for manual dependency injection.
      */
     internal fun workerFactory(): SessionWorkerFactory = SessionWorkerFactory(this)
-
 
     internal class Builder : ManagerBuilder<SessionKitConfig> {
 
