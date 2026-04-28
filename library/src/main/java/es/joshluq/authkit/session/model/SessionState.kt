@@ -9,7 +9,5 @@ sealed interface SessionState {
 
     data object ExpiringSoon : SessionState
 
-
     data object Idle : SessionState
-
 }

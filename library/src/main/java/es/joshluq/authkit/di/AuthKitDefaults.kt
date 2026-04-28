@@ -1,6 +1,5 @@
 package es.joshluq.authkit.di
 
-
 import es.joshluq.encryptionkit.domain.model.SecureBytes
 import es.joshluq.encryptionkit.sdk.EncryptionkitConfig
 import es.joshluq.encryptionkit.sdk.EncryptionkitManager
@@ -105,7 +104,4 @@ internal object AuthKitDefaults {
             .map { it.toInt(RADIX).toByte() }
             .toByteArray()
     }
-
 }
-
-

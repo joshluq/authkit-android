@@ -3,7 +3,6 @@ package es.joshluq.authkit.session.worker
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-
 import es.joshluq.authkit.session.sdk.SessionKit
 
 /**

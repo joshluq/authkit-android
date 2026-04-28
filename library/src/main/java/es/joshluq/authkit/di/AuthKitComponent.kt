@@ -1,6 +1,5 @@
 package es.joshluq.authkit.di
 
-
 import androidx.work.WorkManager
 import es.joshluq.authkit.sdk.AuthKitConfig
 import es.joshluq.authkit.session.sdk.SessionKit
@@ -24,7 +23,7 @@ internal class AuthKitComponent(
         WorkManager.getInstance(config.context)
     }
 
-    val transientStorage : StorageProvider by lazy {
+    val transientStorage: StorageProvider by lazy {
         CacheStorageProvider()
     }
 
@@ -41,5 +40,4 @@ internal class AuthKitComponent(
             initialize(persistentStorage, transientStorage, workManager, logger)
         }
     }
-
 }

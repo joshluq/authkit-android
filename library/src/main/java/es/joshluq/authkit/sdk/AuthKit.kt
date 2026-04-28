@@ -1,15 +1,13 @@
 package es.joshluq.authkit.sdk
 
 import es.joshluq.authkit.di.AuthKitComponent
-import es.joshluq.authkit.di.SessionKitComponent
 import es.joshluq.authkit.session.sdk.SessionKit
-import es.joshluq.authkit.session.sdk.SessionKitConfig
 import es.joshluq.foundationkit.manager.Manager
 import es.joshluq.foundationkit.manager.ManagerBuilder
 
 class AuthKit internal constructor(
     private val componentFactory: (AuthKitConfig) -> AuthKitComponent = { AuthKitComponent(it) }
-): Manager<AuthKitConfig>() {
+) : Manager<AuthKitConfig>() {
 
     companion object {
         private const val TAG = "AuthKit"
@@ -25,7 +23,7 @@ class AuthKit internal constructor(
         component.logger.i(TAG, "AuthKit initialized successfully.")
     }
 
-    class Builder: ManagerBuilder<AuthKitConfig> {
+    class Builder : ManagerBuilder<AuthKitConfig> {
 
         /**
          * Builds and initializes a new instance of [AuthKit].
