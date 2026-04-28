@@ -96,7 +96,7 @@ class SessionKit internal constructor(
 
     suspend fun extendSession(tokens: TokenHolder) {
         mutex.withLock {
-            if (state.value != SessionState.Active) {
+            if (state.value == SessionState.Idle) {
                 component.logger.i(TAG, "Cannot extend session: current state is ${state.value}")
                 return
             }
@@ -121,7 +121,7 @@ class SessionKit internal constructor(
     /**
      * Factory for creating workers. Used for manual dependency injection.
      */
-    internal fun workerFactory(): SessionWorkerFactory = SessionWorkerFactory(this)
+    fun workerFactory(): SessionWorkerFactory = SessionWorkerFactory(this)
 
     internal class Builder : ManagerBuilder<SessionKitConfig> {
 

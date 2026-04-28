@@ -10,15 +10,16 @@ class SessionWorkerManagerImpl(
 ) : SessionWorkerManager {
 
     override fun scheduleExpirationWithWarning(totalDuration: Long, warningBefore: Long?) {
-        val expirationRequest = OneTimeWorkRequestBuilder<SessionExpirationWorker>()
-            .setInitialDelay(totalDuration, TimeUnit.MILLISECONDS)
-            .addTag(EXPIRATION_WORK_TAG)
-            .build()
-
-        if (warningBefore != null) {
+        if (warningBefore != null && warningBefore < totalDuration) {
             val warningDelay = totalDuration - warningBefore
+
             val warningRequest = OneTimeWorkRequestBuilder<SessionPreExpirationWorker>()
                 .setInitialDelay(warningDelay, TimeUnit.MILLISECONDS)
+                .addTag(EXPIRATION_WORK_TAG)
+                .build()
+
+            val expirationRequest = OneTimeWorkRequestBuilder<SessionExpirationWorker>()
+                .setInitialDelay(warningBefore, TimeUnit.MILLISECONDS)
                 .addTag(EXPIRATION_WORK_TAG)
                 .build()
 
@@ -28,6 +29,11 @@ class SessionWorkerManagerImpl(
                 warningRequest
             ).then(expirationRequest).enqueue()
         } else {
+            val expirationRequest = OneTimeWorkRequestBuilder<SessionExpirationWorker>()
+                .setInitialDelay(totalDuration, TimeUnit.MILLISECONDS)
+                .addTag(EXPIRATION_WORK_TAG)
+                .build()
+
             workManager.enqueueUniqueWork(
                 UNIQUE_WORK_NAME,
                 ExistingWorkPolicy.REPLACE,
