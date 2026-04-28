@@ -19,8 +19,8 @@ internal class SaveTokensUseCase(
     override suspend fun invoke(input: Input): Result<NoneOutput> {
         return runCatching {
             val tokens = input.tokens
-            if (tokens.isEmpty()) {
-                throw IllegalArgumentException("Tokens cannot be empty")
+            require(!tokens.isEmpty()) {
+                "Tokens cannot be empty"
             }
             repository.saveTokens(tokens)
             NoneOutput

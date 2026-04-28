@@ -1,8 +1,9 @@
 package es.joshluq.authkit.session.model
 
-data class TokenHolder(
-    private val tokens: MutableMap<String, Token>
-) {
+class TokenHolder {
+    private val tokens: MutableMap<String, Token> = mutableMapOf()
+
+    fun getTokens() = tokens.toMap()
 
     fun addToken(token: Token) {
         val key = when (token) {
