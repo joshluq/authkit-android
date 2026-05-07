@@ -178,5 +178,21 @@ fun SessionScreen(authKit: AuthKit) {
         ) {
             Text("Cerrar Sesión")
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Interactor de Actividad
+        val interactionInteractor = remember { authKit.session.interactionInteractor() }
+        
+        Button(
+            onClick = {
+                interactionInteractor.notify()
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = state !is SessionState.Idle,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+        ) {
+            Text("Simular Actividad (Reset Timer)")
+        }
     }
 }

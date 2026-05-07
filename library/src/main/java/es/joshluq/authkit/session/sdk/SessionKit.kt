@@ -5,6 +5,8 @@ import es.joshluq.authkit.di.ComponentFactory
 import es.joshluq.authkit.di.SessionKitComponent
 import es.joshluq.authkit.di.SessionKitDefaults
 import es.joshluq.authkit.session.domain.usecase.SaveTokensUseCase
+import es.joshluq.authkit.session.domain.interactor.SessionInteractionInteractor
+import es.joshluq.authkit.session.event.SessionEvent
 import es.joshluq.authkit.session.model.ExpirationPolicy
 import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.authkit.session.model.TokenHolder
@@ -14,9 +16,13 @@ import es.joshluq.foundationkit.manager.Manager
 import es.joshluq.foundationkit.manager.ManagerBuilder
 import es.joshluq.foundationkit.provider.StorageProvider
 import es.joshluq.foundationkit.usecase.NoneInput
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -30,6 +36,8 @@ class SessionKit internal constructor(
     }
 
     private lateinit var component: SessionKitComponent
+
+    private val sessionScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     private val mutex = Mutex()
 
@@ -47,7 +55,43 @@ class SessionKit internal constructor(
         logger: Loggerkit,
     ) {
         this.component = componentFactory(config, persistentStorage, transientStorage, workManager, logger)
+        observeSessionEvents()
         component.logger.i(TAG, "SessionKit initialized successfully.")
+    }
+
+    private fun observeSessionEvents() {
+        sessionScope.launch {
+            component.sessionEventBus.events.collect { event ->
+                handleSessionEvent(event)
+            }
+        }
+    }
+
+    private suspend fun handleSessionEvent(event: SessionEvent) {
+        mutex.withLock {
+            val currentState = _state.value
+            when (event) {
+                SessionEvent.PreExpiration -> {
+                    if (currentState is SessionState.Active) {
+                        component.logger.i(TAG, "Processing PreExpiration event.")
+                        _state.value = SessionState.ExpiringSoon
+                    }
+                }
+                SessionEvent.Expiration -> {
+                    if (currentState !is SessionState.Idle) {
+                        component.logger.i(TAG, "Processing Expiration event.")
+                        endSessionInternal()
+                    }
+                }
+                SessionEvent.UserActivity -> {
+                    if (currentState !is SessionState.Idle) {
+                        component.logger.i(TAG, "Processing UserActivity event. Resetting timers.")
+                        startTimerIfNeeded()
+                        _state.value = SessionState.Active
+                    }
+                }
+            }
+        }
     }
 
     suspend fun startSession(tokens: TokenHolder) {
@@ -65,7 +109,11 @@ class SessionKit internal constructor(
         when (val timerConfig = config.expiration) {
             ExpirationPolicy.Never -> Unit
             is ExpirationPolicy.Timed -> {
-                component.logger.i(TAG, "Start Timer with duration: ${timerConfig.durationMillis}ms")
+                component.logger.i(TAG, "Start Timer and Worker with duration: ${timerConfig.durationMillis}ms")
+                component.sessionTimer.start(
+                    timerConfig.durationMillis,
+                    timerConfig.warningThresholdMillis
+                )
                 component.sessionWorker.scheduleExpirationWithWarning(
                     timerConfig.durationMillis,
                     timerConfig.warningThresholdMillis
@@ -76,11 +124,15 @@ class SessionKit internal constructor(
 
     suspend fun endSession() {
         mutex.withLock {
-            component.logger.i(TAG, "Ending session and clearing data.")
-            component.clearSessionUseCase(NoneInput).onSuccess {
-                endTimerIfNeeded()
-                _state.value = SessionState.Idle
-            }
+            endSessionInternal()
+        }
+    }
+
+    private suspend fun endSessionInternal() {
+        component.logger.i(TAG, "Ending session and clearing data.")
+        component.clearSessionUseCase(NoneInput).onSuccess {
+            endTimerIfNeeded()
+            _state.value = SessionState.Idle
         }
     }
 
@@ -88,7 +140,8 @@ class SessionKit internal constructor(
         when (config.expiration) {
             ExpirationPolicy.Never -> Unit
             is ExpirationPolicy.Timed -> {
-                component.logger.i(TAG, "Stop Timer")
+                component.logger.i(TAG, "Stop Timer and Worker")
+                component.sessionTimer.stop()
                 component.sessionWorker.cancelExpiration()
             }
         }
@@ -109,19 +162,15 @@ class SessionKit internal constructor(
         }
     }
 
-    suspend fun emitWarning() {
-        mutex.withLock {
-            val currentState = _state.value
-            if (currentState is SessionState.Active) {
-                _state.value = SessionState.ExpiringSoon
-            }
-        }
-    }
-
     /**
      * Factory for creating workers. Used for manual dependency injection.
      */
-    fun workerFactory(): SessionWorkerFactory = SessionWorkerFactory(this)
+    fun workerFactory(): SessionWorkerFactory = SessionWorkerFactory(component.sessionEventBus)
+
+    /**
+     * Returns the interaction interactor to notify user activity.
+     */
+    fun interactionInteractor(): SessionInteractionInteractor = component.interactionInteractor
 
     internal class Builder : ManagerBuilder<SessionKitConfig> {
 
