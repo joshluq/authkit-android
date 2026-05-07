@@ -4,13 +4,12 @@ import android.content.Context
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
-import es.joshluq.authkit.session.sdk.SessionKit
+import es.joshluq.authkit.session.event.SessionEventBus
 
 /**
  * Custom WorkerFactory for AuthKit session-related workers.
- * Used for manual dependency injection of [SessionKit].
  */
-class SessionWorkerFactory(private val sessionKit: SessionKit) : WorkerFactory() {
+class SessionWorkerFactory internal constructor(private val eventBus: SessionEventBus) : WorkerFactory() {
     override fun createWorker(
         appContext: Context,
         workerClassName: String,
@@ -18,9 +17,9 @@ class SessionWorkerFactory(private val sessionKit: SessionKit) : WorkerFactory()
     ): ListenableWorker? {
         return when (workerClassName) {
             SessionExpirationWorker::class.java.name ->
-                SessionExpirationWorker(appContext, workerParameters, sessionKit)
+                SessionExpirationWorker(appContext, workerParameters, eventBus)
             SessionPreExpirationWorker::class.java.name ->
-                SessionPreExpirationWorker(appContext, workerParameters, sessionKit)
+                SessionPreExpirationWorker(appContext, workerParameters, eventBus)
             else -> null
         }
     }

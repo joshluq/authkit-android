@@ -10,6 +10,7 @@ import es.joshluq.authkit.sdk.AuthKit
 import es.joshluq.authkit.sdk.AuthKitConfig
 import es.joshluq.authkit.session.model.ExpirationPolicy
 import es.joshluq.authkit.session.model.PersistencePolicy
+import es.joshluq.authkit.session.sdk.InteractionConfig
 import es.joshluq.authkit.session.sdk.SessionKitConfig
 import java.util.concurrent.TimeUnit
 
@@ -29,6 +30,10 @@ class ShowcaseApp : Application(), Configuration.Provider {
             expiration = ExpirationPolicy.Timed(
                 durationMillis = TimeUnit.SECONDS.toMillis(30),
                 warningThresholdMillis = TimeUnit.SECONDS.toMillis(10),
+            )
+            interactions = InteractionConfig(
+                enabled = true,
+                throttleIntervalMillis = TimeUnit.SECONDS.toMillis(2)
             )
         }
         
