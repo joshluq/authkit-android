@@ -186,7 +186,7 @@ fun SessionScreen(authKit: AuthKit) {
         
         Button(
             onClick = {
-                interactionInteractor.notify()
+                interactionInteractor.notifyActivity()
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = state !is SessionState.Idle,

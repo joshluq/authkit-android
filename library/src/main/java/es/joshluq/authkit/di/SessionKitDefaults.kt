@@ -1,8 +1,6 @@
 package es.joshluq.authkit.di
 
 import androidx.work.WorkManager
-import es.joshluq.authkit.session.model.ExpirationPolicy
-import es.joshluq.authkit.session.sdk.InteractionConfig
 import es.joshluq.authkit.session.sdk.SessionKitConfig
 import es.joshluq.foundationkit.log.Loggerkit
 import es.joshluq.foundationkit.provider.StorageProvider
@@ -21,11 +19,4 @@ object SessionKitDefaults {
                 logger = logger
             )
         }
-
-
-    fun interactionConfig(enabled: Boolean = false, throttleIntervalMillis: Long = 5000L) = InteractionConfig(
-        enabled = enabled,
-        throttleIntervalMillis = throttleIntervalMillis
-    )
-
 }

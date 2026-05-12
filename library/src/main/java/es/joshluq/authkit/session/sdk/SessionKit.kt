@@ -4,8 +4,10 @@ import androidx.work.WorkManager
 import es.joshluq.authkit.di.ComponentFactory
 import es.joshluq.authkit.di.SessionKitComponent
 import es.joshluq.authkit.di.SessionKitDefaults
-import es.joshluq.authkit.session.domain.usecase.SaveTokensUseCase
+import es.joshluq.authkit.sdk.AuthKit
+import es.joshluq.authkit.sdk.AuthKitPlugin
 import es.joshluq.authkit.session.domain.interactor.SessionInteractionInteractor
+import es.joshluq.authkit.session.domain.usecase.SaveTokensUseCase
 import es.joshluq.authkit.session.event.SessionEvent
 import es.joshluq.authkit.session.model.ExpirationPolicy
 import es.joshluq.authkit.session.model.SessionState
@@ -19,6 +21,7 @@ import es.joshluq.foundationkit.usecase.NoneInput
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,8 +34,19 @@ class SessionKit internal constructor(
     private val componentFactory: ComponentFactory = SessionKitDefaults.factory
 ) : Manager<SessionKitConfig>() {
 
-    companion object {
+    companion object : AuthKitPlugin<SessionKitConfig, SessionKit> {
         private const val TAG = "SessionKit"
+
+        override fun install(authKit: AuthKit, config: SessionKitConfig): SessionKit {
+            return SessionKit(config).apply {
+                initialize(
+                    authKit.component.persistentStorage,
+                    authKit.component.transientStorage,
+                    authKit.component.workManager,
+                    authKit.component.logger
+                )
+            }
+        }
     }
 
     private lateinit var component: SessionKitComponent
@@ -48,7 +62,7 @@ class SessionKit internal constructor(
         this.config = config
     }
 
-    fun initialize(
+    private fun initialize(
         persistentStorage: StorageProvider,
         transientStorage: StorageProvider,
         workManager: WorkManager,
@@ -61,9 +75,7 @@ class SessionKit internal constructor(
 
     private fun observeSessionEvents() {
         sessionScope.launch {
-            component.sessionEventBus.events.collect { event ->
-                handleSessionEvent(event)
-            }
+            component.sessionEventBus.events.collect(::handleSessionEvent)
         }
     }
 
@@ -171,6 +183,7 @@ class SessionKit internal constructor(
      * Returns the interaction interactor to notify user activity.
      */
     fun interactionInteractor(): SessionInteractionInteractor = component.interactionInteractor
+
 
     internal class Builder : ManagerBuilder<SessionKitConfig> {
 
