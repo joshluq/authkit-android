@@ -2,11 +2,11 @@ package es.joshluq.authkit.di
 
 import androidx.work.WorkManager
 import es.joshluq.authkit.session.data.repository.TokenRepositoryImpl
+import es.joshluq.authkit.session.domain.interactor.SessionInteractionInteractor
+import es.joshluq.authkit.session.domain.timer.SessionTimerImpl
 import es.joshluq.authkit.session.domain.usecase.ClearSessionUseCase
 import es.joshluq.authkit.session.domain.usecase.GetTokensUseCase
 import es.joshluq.authkit.session.domain.usecase.SaveTokensUseCase
-import es.joshluq.authkit.session.domain.interactor.SessionInteractionInteractor
-import es.joshluq.authkit.session.domain.timer.SessionTimerImpl
 import es.joshluq.authkit.session.event.SessionEventBus
 import es.joshluq.authkit.session.model.PersistencePolicy
 import es.joshluq.authkit.session.sdk.SessionKitConfig

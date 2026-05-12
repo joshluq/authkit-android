@@ -2,7 +2,7 @@ package es.joshluq.authkit.session.domain.interactor
 
 import es.joshluq.authkit.session.event.SessionEvent
 import es.joshluq.authkit.session.event.SessionEventBus
-import es.joshluq.authkit.session.sdk.InteractionConfig
+import es.joshluq.authkit.session.model.InteractionPolicy
 import es.joshluq.foundationkit.log.Loggerkit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -15,21 +15,22 @@ import java.util.concurrent.atomic.AtomicLong
 class SessionInteractionInteractor internal constructor(
     private val scope: CoroutineScope,
     private val eventBus: SessionEventBus,
-    private val config: InteractionConfig,
-    private val logger: Loggerkit
+    private val policy: InteractionPolicy,
+    private val logger: Loggerkit,
+    private val timeProvider: () -> Long = { System.currentTimeMillis() }
 ) {
     private val lastNotificationTime = AtomicLong(0L)
 
     /**
-     * Notifies user activity. The event will be throttled based on [InteractionConfig.throttleIntervalMillis].
+     * Notifies user activity. The event will be throttled based on [InteractionPolicy.Timed.throttleIntervalMillis].
      */
-    fun notify() {
-        if (!config.enabled) return
+    fun notifyActivity() {
+        val timedPolicy = policy as? InteractionPolicy.Timed ?: return
 
-        val currentTime = System.currentTimeMillis()
+        val currentTime = timeProvider()
         val lastTime = lastNotificationTime.get()
 
-        if (currentTime - lastTime >= config.throttleIntervalMillis) {
+        if (currentTime - lastTime >= timedPolicy.throttleIntervalMillis) {
             if (lastNotificationTime.compareAndSet(lastTime, currentTime)) {
                 logger.i(TAG, "User activity detected, notifying bus.")
                 scope.launch {

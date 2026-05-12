@@ -2,7 +2,6 @@ package es.joshluq.authkit.di
 
 import androidx.work.WorkManager
 import es.joshluq.authkit.sdk.AuthKitConfig
-import es.joshluq.authkit.session.sdk.SessionKit
 import es.joshluq.foundationkit.log.Loggerkit
 import es.joshluq.foundationkit.provider.SerializerProvider
 import es.joshluq.foundationkit.provider.StorageProvider
@@ -33,11 +32,5 @@ internal class AuthKitComponent(
     val persistentStorage: StorageProvider by lazy {
         val sharedPrefs = config.context.getSharedPreferences(config.storeName, android.content.Context.MODE_PRIVATE)
         SharedPreferencesStorageProvider(sharedPrefs, serializer)
-    }
-
-    val session: SessionKit by lazy {
-        SessionKit.Builder().build(config.sessionConfig).apply {
-            initialize(persistentStorage, transientStorage, workManager, logger)
-        }
     }
 }
