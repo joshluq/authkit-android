@@ -1,5 +1,6 @@
-package es.joshluq.authkit.session.domain.timer
+package es.joshluq.authkit.session.domain.lifecycle
 
+import es.joshluq.authkit.session.domain.timer.SessionTimerImpl
 import es.joshluq.authkit.session.event.SessionEvent
 import es.joshluq.authkit.session.event.SessionEventBus
 import es.joshluq.foundationkit.log.Loggerkit
@@ -11,7 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
+import org.junit.Assert
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -32,13 +33,13 @@ class SessionTimerTest {
         timer.start(durationMillis = 1000, warningThresholdMillis = 400)
 
         advanceTimeBy(601) // Duration - Warning = 600
-        assertEquals(1, events.size)
-        assertEquals(SessionEvent.PreExpiration, events[0])
+        Assert.assertEquals(1, events.size)
+        Assert.assertEquals(SessionEvent.PreExpiration, events[0])
 
         advanceTimeBy(401)
-        assertEquals(2, events.size)
-        assertEquals(SessionEvent.Expiration, events[1])
-        
+        Assert.assertEquals(2, events.size)
+        Assert.assertEquals(SessionEvent.Expiration, events[1])
+
         job.cancel()
     }
 }

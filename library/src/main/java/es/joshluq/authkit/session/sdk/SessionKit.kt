@@ -6,7 +6,7 @@ import es.joshluq.authkit.di.SessionKitComponent
 import es.joshluq.authkit.di.SessionKitDefaults
 import es.joshluq.authkit.sdk.AuthKit
 import es.joshluq.authkit.sdk.AuthKitPlugin
-import es.joshluq.authkit.session.domain.interactor.SessionInteractionInteractor
+import es.joshluq.authkit.session.domain.lifecycle.SessionKeepAlive
 import es.joshluq.authkit.session.domain.usecase.SaveTokensUseCase
 import es.joshluq.authkit.session.event.SessionEvent
 import es.joshluq.authkit.session.model.ExpirationPolicy
@@ -15,13 +15,11 @@ import es.joshluq.authkit.session.model.TokenHolder
 import es.joshluq.authkit.session.worker.SessionWorkerFactory
 import es.joshluq.foundationkit.log.Loggerkit
 import es.joshluq.foundationkit.manager.Manager
-import es.joshluq.foundationkit.manager.ManagerBuilder
 import es.joshluq.foundationkit.provider.StorageProvider
 import es.joshluq.foundationkit.usecase.NoneInput
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -180,21 +178,8 @@ class SessionKit internal constructor(
     fun workerFactory(): SessionWorkerFactory = SessionWorkerFactory(component.sessionEventBus)
 
     /**
-     * Returns the interaction interactor to notify user activity.
+     * Returns the component to keep the session alive by notifying user activity.
      */
-    fun interactionInteractor(): SessionInteractionInteractor = component.interactionInteractor
+    fun keepAlive(): SessionKeepAlive = component.keepAlive
 
-
-    internal class Builder : ManagerBuilder<SessionKitConfig> {
-
-        /**
-         * Builds and initializes a new instance of [SessionKit].
-         *
-         * @param config The [SessionKitConfig] required to configure the SDK.
-         * @return A fully initialized [SessionKit] instance.
-         */
-        override fun build(config: SessionKitConfig): SessionKit {
-            return SessionKit(config)
-        }
-    }
 }

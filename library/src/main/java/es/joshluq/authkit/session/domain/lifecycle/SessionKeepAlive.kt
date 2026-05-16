@@ -1,4 +1,4 @@
-package es.joshluq.authkit.session.domain.interactor
+package es.joshluq.authkit.session.domain.lifecycle
 
 import es.joshluq.authkit.session.event.SessionEvent
 import es.joshluq.authkit.session.event.SessionEventBus
@@ -9,10 +9,10 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * Interactor responsible for notifying user activity to the SessionEventBus.
+ * Component responsible for notifying user activity to the SessionEventBus to keep the session alive.
  * Implements throttling to avoid excessive events.
  */
-class SessionInteractionInteractor internal constructor(
+class SessionKeepAlive internal constructor(
     private val scope: CoroutineScope,
     private val eventBus: SessionEventBus,
     private val policy: InteractionPolicy,
@@ -41,6 +41,6 @@ class SessionInteractionInteractor internal constructor(
     }
 
     companion object {
-        private const val TAG = "SessionInteractionInteractor"
+        private const val TAG = "SessionKeepAlive"
     }
 }

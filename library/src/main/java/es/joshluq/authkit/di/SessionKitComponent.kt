@@ -2,8 +2,8 @@ package es.joshluq.authkit.di
 
 import androidx.work.WorkManager
 import es.joshluq.authkit.session.data.repository.TokenRepositoryImpl
-import es.joshluq.authkit.session.domain.interactor.SessionInteractionInteractor
-import es.joshluq.authkit.session.domain.timer.SessionTimerImpl
+import es.joshluq.authkit.session.domain.lifecycle.SessionKeepAlive
+import es.joshluq.authkit.session.domain.lifecycle.SessionTimerImpl
 import es.joshluq.authkit.session.domain.usecase.ClearSessionUseCase
 import es.joshluq.authkit.session.domain.usecase.GetTokensUseCase
 import es.joshluq.authkit.session.domain.usecase.SaveTokensUseCase
@@ -16,6 +16,7 @@ import es.joshluq.foundationkit.provider.StorageProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlin.getValue
 
 /**
  * Internal Dependency Injection component
@@ -61,8 +62,8 @@ internal class SessionKitComponent(
         SessionTimerImpl(sessionScope, sessionEventBus, logger)
     }
 
-    val interactionInteractor by lazy {
-        SessionInteractionInteractor(sessionScope, sessionEventBus, config.interactions, logger)
+    val keepAlive by lazy {
+        SessionKeepAlive(sessionScope, sessionEventBus, config.interactions, logger)
     }
 
     val sessionWorker by lazy {
