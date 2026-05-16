@@ -1,4 +1,4 @@
-package es.joshluq.authkit.session.domain.timer
+package es.joshluq.authkit.session.domain.lifecycle
 
 import es.joshluq.authkit.session.event.SessionEvent
 import es.joshluq.authkit.session.event.SessionEventBus

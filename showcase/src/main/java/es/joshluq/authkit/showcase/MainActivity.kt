@@ -181,12 +181,11 @@ fun SessionScreen(authKit: AuthKit) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Interactor de Actividad
-        val interactionInteractor = remember { authKit.session.interactionInteractor() }
+        val keepAlive = remember { authKit.session.keepAlive() }
         
         Button(
             onClick = {
-                interactionInteractor.notifyActivity()
+                keepAlive.notifyActivity()
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = state !is SessionState.Idle,
