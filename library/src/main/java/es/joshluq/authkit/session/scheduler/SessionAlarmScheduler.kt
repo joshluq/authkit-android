@@ -9,13 +9,13 @@ import es.joshluq.authkit.session.receiver.SessionAlarmReceiver
 
 internal class SessionAlarmScheduler(
     private val context: Context
-) {
+) : SessionScheduler {
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    fun schedule(totalDuration: Long, warningBefore: Long?) {
+    override fun schedule(totalDuration: Long, warningBefore: Long?) {
         cancelAll()
-        
+
         // Expiration Alarm
         scheduleAlarm(totalDuration, SessionAlarmReceiver.ACTION_SESSION_EXPIRATION, 1001)
 
@@ -29,11 +29,13 @@ internal class SessionAlarmScheduler(
     }
 
     private fun scheduleAlarm(delay: Long, action: String, requestCode: Int) {
-        val intent = Intent(context, SessionAlarmReceiver::class.java).apply { 
+        val intent = Intent(context, SessionAlarmReceiver::class.java).apply {
             this.action = action
         }
         val pendingIntent = PendingIntent.getBroadcast(
-            context, requestCode, intent,
+            context,
+            requestCode,
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -54,7 +56,7 @@ internal class SessionAlarmScheduler(
         }
     }
 
-    fun cancelAll() {
+    override fun cancelAll() {
         val alarms = listOf(
             1001 to SessionAlarmReceiver.ACTION_SESSION_EXPIRATION,
             1002 to SessionAlarmReceiver.ACTION_SESSION_WARNING
@@ -62,7 +64,10 @@ internal class SessionAlarmScheduler(
         alarms.forEach { (code, action) ->
             val intent = Intent(context, SessionAlarmReceiver::class.java).apply { this.action = action }
             val pendingIntent = PendingIntent.getBroadcast(
-                context, code, intent, PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+                context,
+                code,
+                intent,
+                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
             )
             pendingIntent?.let { alarmManager.cancel(it) }
         }

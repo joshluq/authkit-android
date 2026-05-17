@@ -3,8 +3,6 @@ package es.joshluq.authkit.session.domain.lifecycle
 import es.joshluq.authkit.di.AuthKitLocator
 import es.joshluq.authkit.session.model.InteractionPolicy
 import es.joshluq.foundationkit.log.Loggerkit
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicLong
 
 /**

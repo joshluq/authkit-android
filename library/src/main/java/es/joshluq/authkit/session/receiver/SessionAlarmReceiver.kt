@@ -9,7 +9,7 @@ internal class SessionAlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: return
-        
+
         // Recover SessionKit via Service Locator
         val sessionKit = AuthKitLocator.resolveSessionKit()
 
@@ -28,6 +28,5 @@ internal class SessionAlarmReceiver : BroadcastReceiver() {
     companion object {
         const val ACTION_SESSION_EXPIRATION = "es.joshluq.authkit.session.ACTION_SESSION_EXPIRATION"
         const val ACTION_SESSION_WARNING = "es.joshluq.authkit.session.ACTION_SESSION_WARNING"
-        const val EXTRA_STORE_NAME = "es.joshluq.authkit.session.EXTRA_STORE_NAME"
     }
 }

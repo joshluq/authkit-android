@@ -53,7 +53,7 @@ internal class SessionKitComponent(
         CoroutineScope(SupervisorJob() + Dispatchers.Main)
     }
 
-    val sessionTimer by lazy {
+    val sessionTimer: es.joshluq.authkit.session.domain.lifecycle.SessionTimer by lazy {
         SessionTimerImpl(sessionScope, logger)
     }
 
@@ -61,7 +61,7 @@ internal class SessionKitComponent(
         SessionKeepAlive(config.interactions, logger)
     }
 
-    val sessionScheduler by lazy {
+    val sessionScheduler: es.joshluq.authkit.session.scheduler.SessionScheduler by lazy {
         SessionAlarmScheduler(context)
     }
 }
