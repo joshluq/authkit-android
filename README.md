@@ -1,68 +1,112 @@
-# Authkit
+# AuthKit Android SDK 🛡️
 
-This is an Android library project generated from the Templatekit template.
+AuthKit is a robust, secure, and "Zero Friction" authentication and session management SDK for Android. It simplifies the implementation of complex authentication flows, token management, and secure data storage following Clean Architecture and SOLID principles.
 
-## Structure
+## 🚀 Key Features
 
-### `library/`
-The main reusable Android library component. This is the artifact that will be consumed by other projects.
+*   **Modular Architecture**: Plugin-based system. Install only what you need.
+*   **Flexible Session Policies**:
+    *   **Persistent**: Stays active across app restarts (Social Network style).
+    *   **Transient**: Clears automatically when the app process is closed (Banking style).
+*   **Expiration Management**: Integrated foreground timers and system-level background alarms (AlarmManager) for precise session timeouts.
+*   **Managed Data Storage**: Securely store additional user context (profiles, roles) linked to the session lifecycle.
+*   **Network Automation**:
+    *   **Interceptor**: Automatic `Authorization: Bearer` header injection.
+    *   **Authenticator**: Silent and thread-safe token refresh handling 401 errors.
+*   **Memory Safe**: No static context references, preventing memory leaks.
+*   **Developer Friendly**: Clean DSL for initialization and clear traceability.
 
-- **`src/main/java/`**: Main library source code
-- **`src/test/java/`**: Unit tests (JVM)
-- **`src/androidTest/java/`**: Instrumented tests (device/emulator)
-- **`src/main/res/`**: Library resources
-- **`consumer-rules.pro`**: ProGuard rules for library consumers
+## 📦 Installation
 
-### `showcase/`
-A demonstration Android application that consumes the library. Use this app to:
+Add the library to your `build.gradle.kts`:
 
-- Test the library API during development
-- Showcase how to use the library
-- Develop and validate features in an integrated environment
-- Run instrumented tests against the library
-
-The showcase app uses the same base package as the library (plus `.showcase`) for seamless integration.
-
-## Building
-
-### Compile the library
-```bash
-./gradlew :library:assemble
+```kotlin
+dependencies {
+    implementation("es.joshluq.authkit:library:1.2.0")
+}
 ```
 
-### Run library tests
-```bash
-./gradlew :library:test
+## 🛠️ Quick Start
+
+### 1. Initialization
+
+Initialize AuthKit in your `Application` class:
+
+```kotlin
+class MyApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        
+        AuthKit.init(this) {
+            storeName = "my_secure_store"
+            
+            // Core Session Management
+            addFeature(SessionKit, SessionKitConfig.build {
+                persistence = PersistencePolicy.Persistent
+                expiration = ExpirationPolicy.Timed(durationMillis = 30 * 60 * 1000)
+            })
+
+            // Optional Network Automation
+            addFeature(NetworkKit, NetworkKitConfig.build {
+                tokenRefresher = MyApiTokenRefresher()
+            })
+        }
+    }
+}
 ```
 
-### Build the showcase app
-```bash
-./gradlew :showcase:assembleDebug
+### 2. Basic Session Operations
+
+```kotlin
+val sessionKit = authKit.session
+
+// Start a session
+sessionKit.startSession(tokens)
+
+// Check current state
+val state = sessionKit.state.value // Active, ExpiringSoon, Idle
+
+// Store custom user data
+@Serializable
+data class UserProfile(val name: String) : SessionData
+sessionKit.saveSessionData(UserProfile("Josh"))
+
+// End session (clears tokens and session data)
+sessionKit.endSession()
 ```
 
-### Run showcase instrumented tests
-```bash
-./gradlew :showcase:connectedAndroidTest
+### 3. Connect to OkHttp
+
+```kotlin
+val networkKit = authKit.plugin<NetworkKit>()!!
+
+val client = OkHttpClient.Builder()
+    .addInterceptor(networkKit.interceptor())
+    .authenticator(networkKit.authenticator())
+    .build()
 ```
 
-## Development Workflow
+## 📱 Showcase App
 
-1. **Add library code** to `library/src/main/java/es/joshluq/authkit/`
-2. **Write unit tests** in `library/src/test/java/es/joshluq/authkit/`
-3. **Write instrumented tests** in `library/src/androidTest/java/es/joshluq/authkit/`
-4. **Integrate the library** in the showcase app at `showcase/src/main/java/es.joshluq.authkit/showcase/` to validate the consumer experience
-5. **Add showcase tests** in `showcase/src/test/java/es.joshluq.authkit/showcase/` or `showcase/src/androidTest/java/es.joshluq.authkit/showcase/`
-6. **Use the showcase app** to develop and test features in a real Android environment
+The project includes a `:showcase` module with real-world presets:
+*   **Social Network**: Validates persistence after app restarts.
+*   **Mobile Banking**: Validates high-security transient sessions and timeouts.
+*   **Kiosk Mode**: Demonstrates quick expiration and warnings.
 
-**Note:** The package structure is automatically created during template generation. All source files are organized with the correct package structure from the start.
+## 🏗️ Architecture
 
-This Consumer-Driven pattern ensures your library API is always tested in a realistic consumer context.
+AuthKit is built with modern Android standards:
+*   **Mediator Pattern**: `SessionKit` centralizes all state transitions.
+*   **Service Locator**: `AuthKitLocator` handles internal dependency injection safely.
+*   **Inversion of Control**: Plugins are decoupled via interfaces like `NetworkSessionProvider`.
+*   **Kotlin Coroutines & Flow**: For reactive and non-blocking operations.
 
-## Configuration
+## 🛡️ Security
 
-This generated project includes a `project-config.properties` file at the project root with overridable values:
+*   Uses `SharedPreferences` (ready for `EncryptedSharedPreferences` integration).
+*   Atomic token and payload deletion.
+*   Protection against infinite 401 loops.
+*   Automatic handling of `SCHEDULE_EXACT_ALARM` permissions.
 
-- `catalogVersion` : the version coordinate used by the version catalog (e.g. `es.joshluq.kit.pluginkit:catalog:0.0.1-SNAPSHOT`).
-- `libraryVersion` : the default version for the `:library` artifact (e.g. `1.0.0`).
-
-Edit `project-config.properties` in the generated project to change these values without modifying build scripts directly.
+---
+Developed with ❤️ by the AuthKit Team.
