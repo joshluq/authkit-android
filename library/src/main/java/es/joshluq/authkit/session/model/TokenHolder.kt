@@ -18,6 +18,12 @@ class TokenHolder {
 
     fun getTokens() = tokens.toMap()
 
+    fun getAccessToken(): Token.Access? = tokens["access"] as? Token.Access
+
+    fun getRefreshToken(): Token.Refresh? = tokens["refresh"] as? Token.Refresh
+
+    fun getCustomToken(name: String): Token.Custom? = tokens[name] as? Token.Custom
+
     fun addToken(token: Token) {
         val key = when (token) {
             is Token.Access -> "access"

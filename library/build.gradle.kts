@@ -21,6 +21,7 @@ dependencies {
     implementation("es.joshluq.kit:foundationkit:1.2.0-SNAPSHOT")
     implementation("es.joshluq.kit:encryptionkit:1.1.0")
     implementation(libs.kotlinx.serialization.json)
+    compileOnly(libs.okhttp)
 }
 
 pluginkitQuality {
