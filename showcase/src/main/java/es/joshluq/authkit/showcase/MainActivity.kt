@@ -22,12 +22,21 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import es.joshluq.authkit.sdk.AuthKit
 import es.joshluq.authkit.session.model.ExpirationPolicy
+import es.joshluq.authkit.session.model.SessionData
 import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.authkit.session.model.Token
 import es.joshluq.authkit.session.model.TokenHolder
 import es.joshluq.authkit.showcase.ui.theme.ShowcaseTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class UserProfile(
+    val name: String,
+    val email: String,
+    val lastLogin: Long
+) : SessionData
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -130,8 +139,19 @@ fun SessionScreen(
 ) {
     val state by authKit.session.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    
-    // Timer local para la demo visual
+
+    var userProfile by remember { mutableStateOf<UserProfile?>(null) }
+
+    // Load profile on start
+    LaunchedEffect(state) {
+        if (state is SessionState.Active) {
+            userProfile = authKit.session.getSessionData<UserProfile>()
+        } else {
+            userProfile = null
+        }
+    }
+
+    // Visual demo timer
     var secondsRemaining by remember { mutableIntStateOf(0) }
     val isTimed = preset.expiration is ExpirationPolicy.Timed
     val initialDuration = if (preset.expiration is ExpirationPolicy.Timed) {
@@ -241,6 +261,37 @@ fun SessionScreen(
                     } else if (!isTimed && state is SessionState.Active) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(text = "✓ Persistent Session", fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
+                    }
+                }
+            }
+
+            if (state is SessionState.Active) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF3E5F5))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(text = "Session Payload:", fontWeight = FontWeight.Bold)
+                        if (userProfile != null) {
+                            Text(text = "Name: ${userProfile?.name}")
+                            Text(text = "Email: ${userProfile?.email}")
+                        } else {
+                            Text(text = "No profile data saved.")
+                            Button(
+                                onClick = {
+                                    scope.launch {
+                                        val profile = UserProfile("Josh Luq", "josh@example.com", System.currentTimeMillis())
+                                        authKit.session.saveSessionData(profile)
+                                        userProfile = profile
+                                    }
+                                },
+                                modifier = Modifier.padding(top = 8.dp)
+                            ) {
+                                Text("Save Mock Profile")
+                            }
+                        }
                     }
                 }
             }
