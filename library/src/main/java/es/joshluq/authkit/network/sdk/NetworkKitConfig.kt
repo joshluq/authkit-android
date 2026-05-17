@@ -6,14 +6,17 @@ import es.joshluq.foundationkit.manager.ManagerConfig
  * Configuration for the NetworkKit plugin.
  */
 class NetworkKitConfig internal constructor(
-    val tokenRefresher: TokenRefresher? = null
+    val tokenRefresher: TokenRefresher? = null,
+    val sessionProvider: NetworkSessionProvider? = null
 ) : ManagerConfig {
 
     class Builder {
         var tokenRefresher: TokenRefresher? = null
+        var sessionProvider: NetworkSessionProvider? = null
 
         fun build(): NetworkKitConfig = NetworkKitConfig(
-            tokenRefresher = tokenRefresher
+            tokenRefresher = tokenRefresher,
+            sessionProvider = sessionProvider
         )
     }
 

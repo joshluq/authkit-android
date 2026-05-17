@@ -3,9 +3,9 @@ package es.joshluq.authkit.network.sdk
 import es.joshluq.authkit.di.AuthKitLocator
 import es.joshluq.authkit.sdk.AuthKit
 import es.joshluq.authkit.sdk.AuthKitPlugin
-import es.joshluq.authkit.session.domain.usecase.SaveTokensUseCase
+import es.joshluq.authkit.session.model.TokenHolder
+import es.joshluq.authkit.session.sdk.SessionKit
 import es.joshluq.foundationkit.manager.Manager
-import es.joshluq.foundationkit.usecase.NoneInput
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Interceptor
@@ -30,6 +30,10 @@ class NetworkKit internal constructor(
         }
     }
 
+    private val sessionProvider: NetworkSessionProvider by lazy {
+        config.sessionProvider ?: DefaultSessionProvider(AuthKitLocator.resolveSessionKit())
+    }
+
     init {
         this.config = config
     }
@@ -39,8 +43,7 @@ class NetworkKit internal constructor(
      * with the current Access Token to every outgoing request.
      */
     fun interceptor(): Interceptor = Interceptor { chain ->
-        val sessionKit = AuthKitLocator.resolveSessionKit()
-        val tokens = runBlocking { sessionKit.component.getTokensUseCase(NoneInput).getOrNull()?.tokens }
+        val tokens = runBlocking { sessionProvider.getTokens() }
         val accessToken = tokens?.getAccessToken()?.value
 
         val requestBuilder = chain.request().newBuilder()
@@ -60,14 +63,11 @@ class NetworkKit internal constructor(
         override fun authenticate(route: Route?, response: Response): Request? {
             if (response.countPriorResponses() >= 3) return null
 
-            val sessionKit = AuthKitLocator.resolveSessionKit()
             val refresher = config.tokenRefresher ?: return null
 
             synchronized(this) {
                 return runBlocking {
-                    val currentTokens = sessionKit.component.getTokensUseCase(NoneInput).getOrNull()?.tokens
-                        ?: return@runBlocking null
-
+                    val currentTokens = sessionProvider.getTokens() ?: return@runBlocking null
                     val accessToken = currentTokens.getAccessToken()?.value
 
                     val requestToken = response.request.header("Authorization")?.removePrefix("Bearer ")
@@ -81,9 +81,7 @@ class NetworkKit internal constructor(
                     val newTokens = result.getOrNull()
 
                     if (newTokens != null) {
-                        val input = SaveTokensUseCase.Input(newTokens)
-                        sessionKit.component.saveTokensUseCase(input)
-
+                        sessionProvider.saveTokens(newTokens)
                         val newAccessToken = newTokens.getAccessToken()?.value
                         if (newAccessToken != null) {
                             return@runBlocking response.request.newBuilder()
@@ -91,7 +89,7 @@ class NetworkKit internal constructor(
                                 .build()
                         }
                     } else {
-                        sessionKit.endSession()
+                        sessionProvider.clearSession()
                     }
                     null
                 }
@@ -107,5 +105,18 @@ class NetworkKit internal constructor(
             prior = prior.priorResponse
         }
         return count
+    }
+
+    /**
+     * Internal implementation of the [NetworkSessionProvider] that delegates to [SessionKit].
+     */
+    private class DefaultSessionProvider(private val sessionKit: SessionKit) : NetworkSessionProvider {
+        override suspend fun getTokens(): TokenHolder? = sessionKit.getTokens()
+        override suspend fun saveTokens(tokens: TokenHolder) {
+            sessionKit.extendSession(tokens)
+        }
+        override suspend fun clearSession() {
+            sessionKit.endSession()
+        }
     }
 }
