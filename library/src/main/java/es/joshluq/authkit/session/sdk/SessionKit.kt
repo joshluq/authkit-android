@@ -65,7 +65,30 @@ class SessionKit internal constructor(
         logger: Loggerkit,
     ) {
         this.component = componentFactory(config, persistentStorage, transientStorage, context, logger)
+        restoreSessionIfPossible()
         component.logger.i(TAG, "SessionKit initialized successfully.")
+    }
+
+    private fun restoreSessionIfPossible() {
+        sessionScope.launch {
+            mutex.withLock {
+                component.getTokensUseCase(NoneInput).onSuccess { output ->
+                    if (!output.tokens.isEmpty()) {
+                        component.logger.i(TAG, "Active session detected during initialization. Restoring state.")
+                        _state.value = SessionState.Active
+
+                        if (config.expiration is ExpirationPolicy.Timed) {
+                            startTimerIfNeeded()
+                        }
+                    } else {
+                        _state.value = SessionState.Idle
+                    }
+                }.onFailure {
+                    component.logger.e(TAG, "Failed to restore session: ${it.message}")
+                    _state.value = SessionState.Idle
+                }
+            }
+        }
     }
 
     internal fun onPreExpirationDetected() {
