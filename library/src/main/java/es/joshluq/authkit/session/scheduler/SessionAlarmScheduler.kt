@@ -11,19 +11,24 @@ internal class SessionAlarmScheduler(
     private val context: Context
 ) : SessionScheduler {
 
+    companion object {
+        const val EXPIRATION_REQUEST_CODE = 1001
+        const val WARNING_REQUEST_CODE = 1002
+    }
+
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     override fun schedule(totalDuration: Long, warningBefore: Long?) {
         cancelAll()
 
         // Expiration Alarm
-        scheduleAlarm(totalDuration, SessionAlarmReceiver.ACTION_SESSION_EXPIRATION, 1001)
+        scheduleAlarm(totalDuration, SessionAlarmReceiver.ACTION_SESSION_EXPIRATION, EXPIRATION_REQUEST_CODE)
 
         // Warning Alarm (optional)
         warningBefore?.let {
             val warningDelay = totalDuration - it
             if (warningDelay > 0) {
-                scheduleAlarm(warningDelay, SessionAlarmReceiver.ACTION_SESSION_WARNING, 1002)
+                scheduleAlarm(warningDelay, SessionAlarmReceiver.ACTION_SESSION_WARNING, WARNING_REQUEST_CODE)
             }
         }
     }
@@ -58,8 +63,8 @@ internal class SessionAlarmScheduler(
 
     override fun cancelAll() {
         val alarms = listOf(
-            1001 to SessionAlarmReceiver.ACTION_SESSION_EXPIRATION,
-            1002 to SessionAlarmReceiver.ACTION_SESSION_WARNING
+            EXPIRATION_REQUEST_CODE to SessionAlarmReceiver.ACTION_SESSION_EXPIRATION,
+            WARNING_REQUEST_CODE to SessionAlarmReceiver.ACTION_SESSION_WARNING
         )
         alarms.forEach { (code, action) ->
             val intent = Intent(context, SessionAlarmReceiver::class.java).apply { this.action = action }

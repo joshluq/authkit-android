@@ -17,7 +17,8 @@ class SessionKeepAlive internal constructor(
     private val lastNotificationTime = AtomicLong(0L)
 
     /**
-     * Notifies user activity. The notification will be throttled based on [InteractionPolicy.Timed.throttleIntervalMillis].
+     * Notifies user activity. The notification will be throttled
+     * based on [InteractionPolicy.Timed.throttleIntervalMillis].
      */
     fun notifyActivity() {
         val timedPolicy = policy as? InteractionPolicy.Timed ?: return

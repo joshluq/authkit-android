@@ -138,7 +138,6 @@ fun SessionScreen(
         (preset.expiration.durationMillis / 1000).toInt()
     } else 0
 
-    // Efecto para manejar el contador visual
     LaunchedEffect(state) {
         if (!isTimed) {
             secondsRemaining = 0
@@ -157,7 +156,11 @@ fun SessionScreen(
                 secondsRemaining = 0
             }
             SessionState.ExpiringSoon -> {
-                // Sincronizar si es necesario
+                secondsRemaining--
+                while (secondsRemaining > 0) {
+                    delay(1000)
+                    secondsRemaining--
+                }
             }
         }
     }
