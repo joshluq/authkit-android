@@ -23,5 +23,5 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.11.2")
     implementation("androidx.startup:startup-runtime:1.2.0")
     implementation("es.joshluq.kit:foundationkit:1.2.0-SNAPSHOT")
-
+    implementation("androidx.compose.material:material-icons-extended")
 }
