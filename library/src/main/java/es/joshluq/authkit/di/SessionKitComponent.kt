@@ -1,16 +1,15 @@
 package es.joshluq.authkit.di
 
-import androidx.work.WorkManager
+import android.content.Context
 import es.joshluq.authkit.session.data.repository.TokenRepositoryImpl
 import es.joshluq.authkit.session.domain.lifecycle.SessionKeepAlive
 import es.joshluq.authkit.session.domain.lifecycle.SessionTimerImpl
 import es.joshluq.authkit.session.domain.usecase.ClearSessionUseCase
 import es.joshluq.authkit.session.domain.usecase.GetTokensUseCase
 import es.joshluq.authkit.session.domain.usecase.SaveTokensUseCase
-import es.joshluq.authkit.session.event.SessionEventBus
 import es.joshluq.authkit.session.model.PersistencePolicy
+import es.joshluq.authkit.session.scheduler.SessionAlarmScheduler
 import es.joshluq.authkit.session.sdk.SessionKitConfig
-import es.joshluq.authkit.session.worker.SessionWorkerManagerImpl
 import es.joshluq.foundationkit.log.Loggerkit
 import es.joshluq.foundationkit.provider.StorageProvider
 import kotlinx.coroutines.CoroutineScope
@@ -25,7 +24,7 @@ import kotlin.getValue
 
 internal class SessionKitComponent(
     private val config: SessionKitConfig,
-    private val workManager: WorkManager,
+    private val context: Context,
     private val persistentStorage: StorageProvider,
     private val transientStorage: StorageProvider,
     val logger: Loggerkit
@@ -50,23 +49,19 @@ internal class SessionKitComponent(
         ClearSessionUseCase(tokenRepository, logger)
     }
 
-    val sessionEventBus by lazy {
-        SessionEventBus()
-    }
-
     private val sessionScope by lazy {
         CoroutineScope(SupervisorJob() + Dispatchers.Main)
     }
 
     val sessionTimer by lazy {
-        SessionTimerImpl(sessionScope, sessionEventBus, logger)
+        SessionTimerImpl(sessionScope, logger)
     }
 
     val keepAlive by lazy {
-        SessionKeepAlive(sessionScope, sessionEventBus, config.interactions, logger)
+        SessionKeepAlive(config.interactions, logger)
     }
 
-    val sessionWorker by lazy {
-        SessionWorkerManagerImpl(workManager)
+    val sessionScheduler by lazy {
+        SessionAlarmScheduler(context)
     }
 }

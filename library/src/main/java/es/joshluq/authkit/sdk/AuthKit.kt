@@ -3,6 +3,7 @@ package es.joshluq.authkit.sdk
 import android.content.Context
 import es.joshluq.authkit.di.AuthKitComponent
 import es.joshluq.authkit.di.AuthKitDefaults
+import es.joshluq.authkit.di.AuthKitLocator
 import es.joshluq.authkit.session.sdk.SessionKit
 import es.joshluq.foundationkit.log.Loggerkit
 import es.joshluq.foundationkit.manager.Manager
@@ -12,13 +13,27 @@ import es.joshluq.foundationkit.manager.Manager
  * Acts as a container for plugins and provides centralized access to their instances.
  */
 class AuthKit private constructor(
-    val context: Context,
-    val logger: Loggerkit,
+    context: Context,
+    private val logger: Loggerkit,
     val storeName: String
 ) : Manager<AuthKitConfig>() {
 
+    val context: Context = context.applicationContext
+
+    companion object {
+        /**
+         * Initializes AuthKit using a DSL block.
+         */
+        @JvmStatic
+        fun init(context: Context, block: Builder.() -> Unit): AuthKit {
+            return Builder(context).apply(block).build().also {
+                AuthKitLocator.register(it)
+            }
+        }
+    }
+
     internal val component: AuthKitComponent by lazy {
-        AuthKitComponent(AuthKitConfig(context, storeName, logger))
+        AuthKitComponent(AuthKitConfig(this.context, storeName, logger))
     }
 
     @PublishedApi
@@ -69,15 +84,6 @@ class AuthKit private constructor(
             val authKit = AuthKit(context, logger, storeName)
             installers.forEach { it(authKit) }
             return authKit
-        }
-    }
-
-    companion object {
-        /**
-         * Initializes AuthKit using a DSL block.
-         */
-        inline fun init(context: Context, block: Builder.() -> Unit): AuthKit {
-            return Builder(context).apply(block).build()
         }
     }
 }

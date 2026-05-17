@@ -1,6 +1,6 @@
 package es.joshluq.authkit.session.sdk
 
-import androidx.work.WorkManager
+import android.content.Context
 import es.joshluq.authkit.di.ComponentFactory
 import es.joshluq.authkit.di.SessionKitComponent
 import es.joshluq.authkit.di.SessionKitDefaults
@@ -8,11 +8,9 @@ import es.joshluq.authkit.sdk.AuthKit
 import es.joshluq.authkit.sdk.AuthKitPlugin
 import es.joshluq.authkit.session.domain.lifecycle.SessionKeepAlive
 import es.joshluq.authkit.session.domain.usecase.SaveTokensUseCase
-import es.joshluq.authkit.session.event.SessionEvent
 import es.joshluq.authkit.session.model.ExpirationPolicy
 import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.authkit.session.model.TokenHolder
-import es.joshluq.authkit.session.worker.SessionWorkerFactory
 import es.joshluq.foundationkit.log.Loggerkit
 import es.joshluq.foundationkit.manager.Manager
 import es.joshluq.foundationkit.provider.StorageProvider
@@ -40,14 +38,14 @@ class SessionKit internal constructor(
                 initialize(
                     authKit.component.persistentStorage,
                     authKit.component.transientStorage,
-                    authKit.component.workManager,
+                    authKit.component.context,
                     authKit.component.logger
                 )
             }
         }
     }
 
-    private lateinit var component: SessionKitComponent
+    internal lateinit var component: SessionKitComponent
 
     private val sessionScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -63,42 +61,42 @@ class SessionKit internal constructor(
     private fun initialize(
         persistentStorage: StorageProvider,
         transientStorage: StorageProvider,
-        workManager: WorkManager,
+        context: Context,
         logger: Loggerkit,
     ) {
-        this.component = componentFactory(config, persistentStorage, transientStorage, workManager, logger)
-        observeSessionEvents()
+        this.component = componentFactory(config, persistentStorage, transientStorage, context, logger)
         component.logger.i(TAG, "SessionKit initialized successfully.")
     }
 
-    private fun observeSessionEvents() {
+    internal fun onPreExpirationDetected() {
         sessionScope.launch {
-            component.sessionEventBus.events.collect(::handleSessionEvent)
+            mutex.withLock {
+                if (_state.value is SessionState.Active) {
+                    component.logger.i(TAG, "Processing PreExpiration notification.")
+                    _state.value = SessionState.ExpiringSoon
+                }
+            }
         }
     }
 
-    private suspend fun handleSessionEvent(event: SessionEvent) {
-        mutex.withLock {
-            val currentState = _state.value
-            when (event) {
-                SessionEvent.PreExpiration -> {
-                    if (currentState is SessionState.Active) {
-                        component.logger.i(TAG, "Processing PreExpiration event.")
-                        _state.value = SessionState.ExpiringSoon
-                    }
+    internal fun onExpirationDetected() {
+        sessionScope.launch {
+            mutex.withLock {
+                if (_state.value !is SessionState.Idle) {
+                    component.logger.i(TAG, "Processing Expiration notification.")
+                    endSessionInternal()
                 }
-                SessionEvent.Expiration -> {
-                    if (currentState !is SessionState.Idle) {
-                        component.logger.i(TAG, "Processing Expiration event.")
-                        endSessionInternal()
-                    }
-                }
-                SessionEvent.UserActivity -> {
-                    if (currentState !is SessionState.Idle) {
-                        component.logger.i(TAG, "Processing UserActivity event. Resetting timers.")
-                        startTimerIfNeeded()
-                        _state.value = SessionState.Active
-                    }
+            }
+        }
+    }
+
+    internal fun onUserActivityDetected() {
+        sessionScope.launch {
+            mutex.withLock {
+                if (_state.value !is SessionState.Idle) {
+                    component.logger.i(TAG, "Processing UserActivity notification. Resetting timers.")
+                    startTimerIfNeeded()
+                    _state.value = SessionState.Active
                 }
             }
         }
@@ -119,12 +117,12 @@ class SessionKit internal constructor(
         when (val timerConfig = config.expiration) {
             ExpirationPolicy.Never -> Unit
             is ExpirationPolicy.Timed -> {
-                component.logger.i(TAG, "Start Timer and Worker with duration: ${timerConfig.durationMillis}ms")
+                component.logger.i(TAG, "Start Timer and Scheduler with duration: ${timerConfig.durationMillis}ms")
                 component.sessionTimer.start(
                     timerConfig.durationMillis,
                     timerConfig.warningThresholdMillis
                 )
-                component.sessionWorker.scheduleExpirationWithWarning(
+                component.sessionScheduler.schedule(
                     timerConfig.durationMillis,
                     timerConfig.warningThresholdMillis
                 )
@@ -150,9 +148,9 @@ class SessionKit internal constructor(
         when (config.expiration) {
             ExpirationPolicy.Never -> Unit
             is ExpirationPolicy.Timed -> {
-                component.logger.i(TAG, "Stop Timer and Worker")
+                component.logger.i(TAG, "Stop Timer and Scheduler")
                 component.sessionTimer.stop()
-                component.sessionWorker.cancelExpiration()
+                component.sessionScheduler.cancelAll()
             }
         }
     }
@@ -173,13 +171,7 @@ class SessionKit internal constructor(
     }
 
     /**
-     * Factory for creating workers. Used for manual dependency injection.
-     */
-    fun workerFactory(): SessionWorkerFactory = SessionWorkerFactory(component.sessionEventBus)
-
-    /**
      * Returns the component to keep the session alive by notifying user activity.
      */
     fun keepAlive(): SessionKeepAlive = component.keepAlive
-
 }

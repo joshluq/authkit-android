@@ -1,6 +1,5 @@
 package es.joshluq.authkit.di
 
-import androidx.work.WorkManager
 import es.joshluq.authkit.sdk.AuthKitConfig
 import es.joshluq.foundationkit.log.Loggerkit
 import es.joshluq.foundationkit.provider.SerializerProvider
@@ -16,11 +15,9 @@ internal class AuthKitComponent(
     private val config: AuthKitConfig
 ) {
 
-    val logger: Loggerkit by lazy { config.logger }
+    val context by lazy { config.context }
 
-    val workManager: WorkManager by lazy {
-        WorkManager.getInstance(config.context)
-    }
+    val logger: Loggerkit by lazy { config.logger }
 
     val transientStorage: StorageProvider by lazy {
         CacheStorageProvider()
