@@ -1,6 +1,19 @@
 package es.joshluq.authkit.session.model
 
 class TokenHolder {
+
+    companion object Defaults {
+        fun empty(): TokenHolder = TokenHolder()
+
+        fun withToken(token: Token): TokenHolder = TokenHolder().apply { addToken(token) }
+
+        fun withTokens(vararg tokens: Token): TokenHolder = TokenHolder().apply { tokens.forEach { addToken(it) } }
+
+        fun withTokens(tokens: Collection<Token>): TokenHolder = TokenHolder().apply { tokens.forEach { addToken(it) } }
+
+        fun withoutToken(): TokenHolder =
+            TokenHolder().apply { addToken(Token.Custom("withoutToken", "withoutToken")) }
+    }
     private val tokens: MutableMap<String, Token> = mutableMapOf()
 
     fun getTokens() = tokens.toMap()
