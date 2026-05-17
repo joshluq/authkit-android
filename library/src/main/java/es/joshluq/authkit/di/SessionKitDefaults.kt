@@ -15,7 +15,7 @@ internal typealias ComponentFactory = (
 
 object SessionKitDefaults {
 
-    internal val factory = { session: SessionKitConfig,
+    internal val factory: ComponentFactory = { session: SessionKitConfig,
             persistentStorage: StorageProvider,
             transientStorage: StorageProvider,
             context: Context,
