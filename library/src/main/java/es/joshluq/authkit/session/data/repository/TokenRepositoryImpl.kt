@@ -1,6 +1,7 @@
 package es.joshluq.authkit.session.data.repository
 
 import es.joshluq.authkit.session.domain.repository.TokenRepository
+import es.joshluq.authkit.session.model.SessionData
 import es.joshluq.authkit.session.model.Token
 import es.joshluq.authkit.session.model.TokenHolder
 import es.joshluq.foundationkit.log.Loggerkit
@@ -20,6 +21,7 @@ internal class TokenRepositoryImpl(
     companion object {
         private const val TAG = "TokenRepository"
         private const val TOKENS_KEY = "TOKENS_KEY"
+        private const val SESSION_DATA_KEY = "SESSION_DATA_KEY"
     }
 
     override fun getTokens(): TokenHolder {
@@ -47,8 +49,18 @@ internal class TokenRepositoryImpl(
         storage.save(TOKENS_KEY, jsonToken)
     }
 
+    override fun <T : SessionData> saveSessionData(data: T, clazz: Class<T>) {
+        logger.d(TAG, "Saving session data: ${clazz.simpleName}")
+        storage.save(SESSION_DATA_KEY, data, clazz)
+    }
+
+    override fun <T : SessionData> getSessionData(clazz: Class<T>): T? {
+        logger.d(TAG, "Reading session data: ${clazz.simpleName}")
+        return storage.read(SESSION_DATA_KEY, clazz)
+    }
+
     override fun clearAll() {
-        logger.d(TAG, "Clearing all tokens")
+        logger.d(TAG, "Clearing all tokens and session data")
         storage.clear()
     }
 }

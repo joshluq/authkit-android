@@ -7,8 +7,11 @@ import es.joshluq.authkit.di.SessionKitDefaults
 import es.joshluq.authkit.sdk.AuthKit
 import es.joshluq.authkit.sdk.AuthKitPlugin
 import es.joshluq.authkit.session.domain.lifecycle.SessionKeepAlive
+import es.joshluq.authkit.session.domain.usecase.GetSessionDataUseCase
+import es.joshluq.authkit.session.domain.usecase.SaveSessionDataUseCase
 import es.joshluq.authkit.session.domain.usecase.SaveTokensUseCase
 import es.joshluq.authkit.session.model.ExpirationPolicy
+import es.joshluq.authkit.session.model.SessionData
 import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.authkit.session.model.TokenHolder
 import es.joshluq.foundationkit.log.Loggerkit
@@ -65,6 +68,7 @@ class SessionKit internal constructor(
     /**
      * Internal dependency component providing access to use cases and services.
      */
+    @PublishedApi
     internal lateinit var component: SessionKitComponent
 
     private val sessionScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -256,6 +260,39 @@ class SessionKit internal constructor(
                 _state.value = SessionState.Active
             }
         }
+    }
+
+    /**
+     * Saves additional session data.
+     * The provided data must implement [SessionData] and should be serializable.
+     *
+     * @param data The data to be saved.
+     */
+    suspend inline fun <reified T : SessionData> saveSessionData(data: T) {
+        saveSessionData(data, T::class.java)
+    }
+
+    @PublishedApi
+    internal suspend fun <T : SessionData> saveSessionData(data: T, clazz: Class<T>) {
+        val input = SaveSessionDataUseCase.Input(data, clazz)
+        component.saveSessionDataUseCase(input)
+    }
+
+    /**
+     * Retrieves additional session data of the specified type.
+     *
+     * @return The saved data, or null if not found.
+     */
+    suspend inline fun <reified T : SessionData> getSessionData(): T? {
+        return getSessionData(T::class.java)
+    }
+
+    @PublishedApi
+    internal suspend fun <T : SessionData> getSessionData(clazz: Class<T>): T? {
+        val input = GetSessionDataUseCase.Input(clazz)
+        val result = component.getSessionDataUseCase(input)
+        @Suppress("UNCHECKED_CAST")
+        return result.getOrNull()?.data as? T
     }
 
     /**

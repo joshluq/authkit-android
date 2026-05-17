@@ -5,7 +5,9 @@ import es.joshluq.authkit.session.data.repository.TokenRepositoryImpl
 import es.joshluq.authkit.session.domain.lifecycle.SessionKeepAlive
 import es.joshluq.authkit.session.domain.lifecycle.SessionTimerImpl
 import es.joshluq.authkit.session.domain.usecase.ClearSessionUseCase
+import es.joshluq.authkit.session.domain.usecase.GetSessionDataUseCase
 import es.joshluq.authkit.session.domain.usecase.GetTokensUseCase
+import es.joshluq.authkit.session.domain.usecase.SaveSessionDataUseCase
 import es.joshluq.authkit.session.domain.usecase.SaveTokensUseCase
 import es.joshluq.authkit.session.model.PersistencePolicy
 import es.joshluq.authkit.session.scheduler.SessionAlarmScheduler
@@ -47,6 +49,14 @@ internal class SessionKitComponent(
 
     val clearSessionUseCase by lazy {
         ClearSessionUseCase(tokenRepository, logger)
+    }
+
+    val saveSessionDataUseCase by lazy {
+        SaveSessionDataUseCase(tokenRepository, logger)
+    }
+
+    val getSessionDataUseCase by lazy {
+        GetSessionDataUseCase(tokenRepository, logger)
     }
 
     private val sessionScope by lazy {
