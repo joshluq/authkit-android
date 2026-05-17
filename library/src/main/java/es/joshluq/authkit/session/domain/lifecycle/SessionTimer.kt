@@ -1,7 +1,6 @@
 package es.joshluq.authkit.session.domain.lifecycle
 
-import es.joshluq.authkit.session.event.SessionEvent
-import es.joshluq.authkit.session.event.SessionEventBus
+import es.joshluq.authkit.di.AuthKitLocator
 import es.joshluq.foundationkit.log.Loggerkit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -21,7 +20,6 @@ internal interface SessionTimer {
  */
 internal class SessionTimerImpl(
     private val scope: CoroutineScope,
-    private val eventBus: SessionEventBus,
     private val logger: Loggerkit
 ) : SessionTimer {
 
@@ -31,17 +29,19 @@ internal class SessionTimerImpl(
         stop()
         timerJob = scope.launch {
             logger.i(TAG, "Starting session timer: duration=$durationMillis, warning=$warningThresholdMillis")
+            val sessionKit = AuthKitLocator.resolveSessionKit()
+            
             if (warningThresholdMillis != null && warningThresholdMillis < durationMillis) {
                 val warningDelay = durationMillis - warningThresholdMillis
                 delay(warningDelay)
-                logger.i(TAG, "Emitting PreExpiration event from timer")
-                eventBus.emit(SessionEvent.PreExpiration)
+                logger.i(TAG, "Notifying PreExpiration from timer")
+                sessionKit.onPreExpirationDetected()
                 delay(warningThresholdMillis)
             } else {
                 delay(durationMillis)
             }
-            logger.i(TAG, "Emitting Expiration event from timer")
-            eventBus.emit(SessionEvent.Expiration)
+            logger.i(TAG, "Notifying Expiration from timer")
+            sessionKit.onExpirationDetected()
         }
     }
 

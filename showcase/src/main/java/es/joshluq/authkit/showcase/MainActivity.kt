@@ -186,6 +186,7 @@ fun SessionScreen(authKit: AuthKit) {
         Button(
             onClick = {
                 keepAlive.notifyActivity()
+                secondsRemaining = 30 // Reiniciar timer visual
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = state !is SessionState.Idle,

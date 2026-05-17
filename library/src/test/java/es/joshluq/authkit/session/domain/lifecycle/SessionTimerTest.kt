@@ -1,45 +1,47 @@
 package es.joshluq.authkit.session.domain.lifecycle
 
-import es.joshluq.authkit.session.domain.timer.SessionTimerImpl
-import es.joshluq.authkit.session.event.SessionEvent
-import es.joshluq.authkit.session.event.SessionEventBus
+import es.joshluq.authkit.di.AuthKitLocator
+import es.joshluq.authkit.session.sdk.SessionKit
 import es.joshluq.foundationkit.log.Loggerkit
+import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionTimerTest {
 
-    private val eventBus = SessionEventBus()
     private val logger: Loggerkit = mockk(relaxed = true)
     private val testScope = TestScope()
-    private val timer = SessionTimerImpl(testScope, eventBus, logger)
+    private val sessionKit: SessionKit = mockk(relaxed = true)
+    private val timer = SessionTimerImpl(testScope, logger)
+
+    @Before
+    fun setUp() {
+        mockkObject(AuthKitLocator)
+        io.mockk.every { AuthKitLocator.resolveSessionKit() } returns sessionKit
+    }
+
+    @After
+    fun tearDown() {
+        unmockkObject(AuthKitLocator)
+    }
 
     @Test
-    fun `timer should emit events after specified delays`() = testScope.runTest {
-        val events = mutableListOf<SessionEvent>()
-        val job = launch {
-            eventBus.events.take(2).toList(events)
-        }
-
+    fun `timer should notify sessionKit after specified delays`() = testScope.runTest {
         timer.start(durationMillis = 1000, warningThresholdMillis = 400)
 
         advanceTimeBy(601) // Duration - Warning = 600
-        Assert.assertEquals(1, events.size)
-        Assert.assertEquals(SessionEvent.PreExpiration, events[0])
+        coVerify(exactly = 1) { sessionKit.onPreExpirationDetected() }
 
         advanceTimeBy(401)
-        Assert.assertEquals(2, events.size)
-        Assert.assertEquals(SessionEvent.Expiration, events[1])
-
-        job.cancel()
+        coVerify(exactly = 1) { sessionKit.onExpirationDetected() }
     }
 }
