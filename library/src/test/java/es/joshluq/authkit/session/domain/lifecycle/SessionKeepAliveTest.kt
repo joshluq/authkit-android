@@ -37,7 +37,7 @@ class SessionKeepAliveTest {
     fun `notifyActivity should notify SessionKit when enabled`() = testScope.runTest {
         val policy = InteractionPolicy.Timed(throttleIntervalMillis = 0)
         val keepAlive = SessionKeepAlive(
-            testScope, policy, logger,
+            policy, logger,
             timeProvider = { 1000L }
         )
 
@@ -52,7 +52,7 @@ class SessionKeepAliveTest {
         val policy = InteractionPolicy.Timed(throttleIntervalMillis = 1000)
         var currentTime = 1000L
         val keepAlive = SessionKeepAlive(
-            testScope, policy, logger,
+            policy, logger,
             timeProvider = { currentTime }
         )
 
@@ -75,7 +75,7 @@ class SessionKeepAliveTest {
     @Test
     fun `notifyActivity should not notify when policy is None`() = testScope.runTest {
         val policy = InteractionPolicy.None
-        val keepAlive = SessionKeepAlive(testScope, policy, logger)
+        val keepAlive = SessionKeepAlive(policy, logger)
 
         keepAlive.notifyActivity()
         testScope.testScheduler.runCurrent()

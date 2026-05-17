@@ -30,7 +30,7 @@ internal class SessionTimerImpl(
         timerJob = scope.launch {
             logger.i(TAG, "Starting session timer: duration=$durationMillis, warning=$warningThresholdMillis")
             val sessionKit = AuthKitLocator.resolveSessionKit()
-            
+
             if (warningThresholdMillis != null && warningThresholdMillis < durationMillis) {
                 val warningDelay = durationMillis - warningThresholdMillis
                 delay(warningDelay)

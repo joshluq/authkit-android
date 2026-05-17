@@ -29,5 +29,4 @@ internal object AuthKitLocator {
      * Helper method to resolve the SessionKit plugin.
      */
     fun resolveSessionKit(): SessionKit = getAuthKit().plugin<SessionKit>() ?: error("SessionKit plugin not installed")
-
 }
