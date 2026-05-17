@@ -296,6 +296,13 @@ class SessionKit internal constructor(
     }
 
     /**
+     * Returns the current tokens if a session is active.
+     */
+    suspend fun getTokens(): TokenHolder? {
+        return component.getTokensUseCase(NoneInput).getOrNull()?.tokens
+    }
+
+    /**
      * Returns the component used to keep the session alive by notifying user activity.
      *
      * @return A [SessionKeepAlive] instance.
