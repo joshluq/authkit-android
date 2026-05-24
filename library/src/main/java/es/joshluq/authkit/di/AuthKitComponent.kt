@@ -5,7 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import es.joshluq.authkit.sdk.AuthKitConfig
-import es.joshluq.encryptionkit.sdk.EncryptionkitManager
+import es.joshluq.encryptionkit.sdk.EncryptionKit
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.provider.SerializerProvider
 import es.joshluq.foundationkit.provider.StorageProvider
@@ -31,8 +31,8 @@ internal class AuthKitComponent(
 
     val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = config.storeName)
 
-    val encryptionKit: EncryptionkitManager by lazy {
-        EncryptionkitManager.build(context) {
+    val encryptionKit: EncryptionKit by lazy {
+        EncryptionKit.build(context) {
             alias = config.encryptionAlias
             logger = this@AuthKitComponent.logger
         }
