@@ -4,7 +4,7 @@ import es.joshluq.encryptionkit.domain.model.SecureBytes
 import es.joshluq.encryptionkit.sdk.EncryptionkitConfig
 import es.joshluq.encryptionkit.sdk.EncryptionkitManager
 import es.joshluq.foundationkit.log.LoggerDefaults
-import es.joshluq.foundationkit.log.Loggerkit
+import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.provider.EncryptionProvider
 import es.joshluq.foundationkit.provider.SerializerProvider
 import kotlinx.coroutines.runBlocking
@@ -22,8 +22,8 @@ internal object AuthKitDefaults {
     private const val PARTS = 2
     private const val RADIX = 16
 
-    val logger: Loggerkit by lazy {
-        Loggerkit.Builder()
+    val logger: LoggerKit by lazy {
+        LoggerKit.Builder()
             .setProvider(LoggerDefaults.defaultLogProvider(tagPrefix = TAG, showThread = false))
             .build()
     }

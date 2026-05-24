@@ -2,7 +2,7 @@ package es.joshluq.authkit.session.domain.lifecycle
 
 import es.joshluq.authkit.di.AuthKitLocator
 import es.joshluq.authkit.session.sdk.SessionKit
-import es.joshluq.foundationkit.log.Loggerkit
+import es.joshluq.foundationkit.log.LoggerKit
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -18,7 +18,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionTimerTest {
 
-    private val logger: Loggerkit = mockk(relaxed = true)
+    private val logger: LoggerKit = mockk(relaxed = true)
     private val testScope = TestScope()
     private val sessionKit: SessionKit = mockk(relaxed = true)
     private val timer = SessionTimerImpl(testScope, logger)

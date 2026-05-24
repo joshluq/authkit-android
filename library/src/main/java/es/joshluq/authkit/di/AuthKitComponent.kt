@@ -1,7 +1,7 @@
 package es.joshluq.authkit.di
 
 import es.joshluq.authkit.sdk.AuthKitConfig
-import es.joshluq.foundationkit.log.Loggerkit
+import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.provider.SerializerProvider
 import es.joshluq.foundationkit.provider.StorageProvider
 import es.joshluq.foundationkit.storage.CacheStorageProvider
@@ -17,7 +17,7 @@ internal class AuthKitComponent(
 
     val context by lazy { config.context }
 
-    val logger: Loggerkit by lazy { config.logger }
+    val logger: LoggerKit by lazy { config.logger }
 
     val transientStorage: StorageProvider by lazy {
         CacheStorageProvider()

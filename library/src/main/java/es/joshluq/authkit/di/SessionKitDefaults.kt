@@ -2,7 +2,7 @@ package es.joshluq.authkit.di
 
 import android.content.Context
 import es.joshluq.authkit.session.sdk.SessionKitConfig
-import es.joshluq.foundationkit.log.Loggerkit
+import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.provider.StorageProvider
 
 internal typealias ComponentFactory = (
@@ -10,7 +10,7 @@ internal typealias ComponentFactory = (
     StorageProvider,
     StorageProvider,
     Context,
-    Loggerkit
+    LoggerKit
 ) -> SessionKitComponent
 
 object SessionKitDefaults {
@@ -19,7 +19,7 @@ object SessionKitDefaults {
             persistentStorage: StorageProvider,
             transientStorage: StorageProvider,
             context: Context,
-            logger: Loggerkit ->
+            logger: LoggerKit ->
         SessionKitComponent(
             config = session,
             context = context,

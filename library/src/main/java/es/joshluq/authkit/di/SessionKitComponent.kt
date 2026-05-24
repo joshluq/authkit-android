@@ -12,7 +12,7 @@ import es.joshluq.authkit.session.domain.usecase.SaveTokensUseCase
 import es.joshluq.authkit.session.model.PersistencePolicy
 import es.joshluq.authkit.session.scheduler.SessionAlarmScheduler
 import es.joshluq.authkit.session.sdk.SessionKitConfig
-import es.joshluq.foundationkit.log.Loggerkit
+import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.provider.StorageProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +29,7 @@ internal class SessionKitComponent(
     private val context: Context,
     private val persistentStorage: StorageProvider,
     private val transientStorage: StorageProvider,
-    val logger: Loggerkit
+    val logger: LoggerKit
 ) {
 
     val tokenRepository by lazy {

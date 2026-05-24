@@ -8,7 +8,7 @@ import es.joshluq.authkit.session.model.ExpirationPolicy
 import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.authkit.session.model.TokenHolder
 import es.joshluq.authkit.session.scheduler.SessionScheduler
-import es.joshluq.foundationkit.log.Loggerkit
+import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.NoneOutput
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +32,7 @@ class SessionKitTest {
     private val clearSessionUseCase: ClearSessionUseCase = mockk()
     private val sessionTimer: SessionTimer = mockk(relaxed = true)
     private val sessionScheduler: SessionScheduler = mockk(relaxed = true)
-    private val logger: Loggerkit = mockk(relaxed = true)
+    private val logger: LoggerKit = mockk(relaxed = true)
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
