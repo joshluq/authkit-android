@@ -22,8 +22,14 @@ class NetworkKit internal constructor(
 ) : Manager<NetworkKitConfig>() {
 
     companion object : AuthKitPlugin<NetworkKitConfig, NetworkKit> {
+        private const val MAX_RETRIES = 3
+
         /**
          * Installs the [NetworkKit] plugin into an [AuthKit] instance.
+         *
+         * @param authKit The AuthKit instance where the plugin is installed.
+         * @param config The configuration for the NetworkKit.
+         * @return The configured and initialized [NetworkKit] instance.
          */
         override fun install(authKit: AuthKit, config: NetworkKitConfig): NetworkKit {
             return NetworkKit(config)
@@ -41,6 +47,8 @@ class NetworkKit internal constructor(
     /**
      * Returns an OkHttp [Interceptor] that automatically adds the Authorization header
      * with the current Access Token to every outgoing request.
+     *
+     * @return The [Interceptor] configured for token injection.
      */
     fun interceptor(): Interceptor = Interceptor { chain ->
         val tokens = runBlocking { sessionProvider.getTokens() }
@@ -58,10 +66,13 @@ class NetworkKit internal constructor(
      * Returns an OkHttp [Authenticator] that handles HTTP 401 Unauthorized errors.
      * It attempts a silent refresh using the [TokenRefresher] provided in the config.
      * If successful, the original request is retried with the new token.
+     * If the refresh fails or the token refresher is not provided, the session is cleared.
+     *
+     * @return The [Authenticator] configured for silent token refresh.
      */
     fun authenticator(): Authenticator = object : Authenticator {
         override fun authenticate(route: Route?, response: Response): Request? {
-            if (response.countPriorResponses() >= 3) return null
+            if (response.countPriorResponses() >= MAX_RETRIES) return null
 
             val refresher = config.tokenRefresher ?: return null
 

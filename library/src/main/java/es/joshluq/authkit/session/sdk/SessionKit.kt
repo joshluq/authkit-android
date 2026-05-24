@@ -296,7 +296,9 @@ class SessionKit internal constructor(
     }
 
     /**
-     * Returns the current tokens if a session is active.
+     * Retrieves the current authentication tokens if a session is active.
+     *
+     * @return The [TokenHolder] if a session exists and tokens are available, null otherwise.
      */
     suspend fun getTokens(): TokenHolder? {
         return component.getTokensUseCase(NoneInput).getOrNull()?.tokens
