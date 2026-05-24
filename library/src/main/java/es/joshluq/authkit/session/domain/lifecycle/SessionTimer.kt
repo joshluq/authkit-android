@@ -1,7 +1,7 @@
 package es.joshluq.authkit.session.domain.lifecycle
 
 import es.joshluq.authkit.di.AuthKitLocator
-import es.joshluq.foundationkit.log.Loggerkit
+import es.joshluq.foundationkit.log.LoggerKit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -20,7 +20,7 @@ internal interface SessionTimer {
  */
 internal class SessionTimerImpl(
     private val scope: CoroutineScope,
-    private val logger: Loggerkit
+    private val logger: LoggerKit
 ) : SessionTimer {
 
     private var timerJob: Job? = null

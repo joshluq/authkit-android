@@ -14,7 +14,7 @@ import es.joshluq.authkit.session.model.ExpirationPolicy
 import es.joshluq.authkit.session.model.SessionData
 import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.authkit.session.model.TokenHolder
-import es.joshluq.foundationkit.log.Loggerkit
+import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.manager.Manager
 import es.joshluq.foundationkit.provider.StorageProvider
 import es.joshluq.foundationkit.usecase.NoneInput
@@ -93,7 +93,7 @@ class SessionKit internal constructor(
         persistentStorage: StorageProvider,
         transientStorage: StorageProvider,
         context: Context,
-        logger: Loggerkit,
+        logger: LoggerKit,
     ) {
         this.component = componentFactory(config, persistentStorage, transientStorage, context, logger)
         restoreSessionIfPossible()

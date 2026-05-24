@@ -2,7 +2,7 @@ package es.joshluq.authkit.session.domain.lifecycle
 
 import es.joshluq.authkit.di.AuthKitLocator
 import es.joshluq.authkit.session.model.InteractionPolicy
-import es.joshluq.foundationkit.log.Loggerkit
+import es.joshluq.foundationkit.log.LoggerKit
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong
  */
 class SessionKeepAlive internal constructor(
     private val policy: InteractionPolicy,
-    private val logger: Loggerkit,
+    private val logger: LoggerKit,
     private val timeProvider: () -> Long = { System.currentTimeMillis() }
 ) {
     private val lastNotificationTime = AtomicLong(0L)

@@ -5,7 +5,7 @@ import es.joshluq.authkit.di.AuthKitComponent
 import es.joshluq.authkit.di.AuthKitDefaults
 import es.joshluq.authkit.di.AuthKitLocator
 import es.joshluq.authkit.session.sdk.SessionKit
-import es.joshluq.foundationkit.log.Loggerkit
+import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.manager.Manager
 
 /**
@@ -14,7 +14,7 @@ import es.joshluq.foundationkit.manager.Manager
  */
 class AuthKit private constructor(
     context: Context,
-    private val logger: Loggerkit,
+    private val logger: LoggerKit,
     val storeName: String
 ) : Manager<AuthKitConfig>() {
 
@@ -63,7 +63,7 @@ class AuthKit private constructor(
      * DSL Builder for [AuthKit] initialization.
      */
     class Builder(private val context: Context) {
-        var logger: Loggerkit = AuthKitDefaults.logger
+        var logger: LoggerKit = AuthKitDefaults.logger
         var storeName: String = "auth_kit_store"
         private val installers = mutableListOf<(AuthKit) -> Unit>()
 
