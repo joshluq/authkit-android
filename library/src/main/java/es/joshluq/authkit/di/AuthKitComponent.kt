@@ -1,11 +1,15 @@
 package es.joshluq.authkit.di
 
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import es.joshluq.authkit.sdk.AuthKitConfig
+import es.joshluq.encryptionkit.sdk.EncryptionkitManager
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.provider.SerializerProvider
 import es.joshluq.foundationkit.provider.StorageProvider
 import es.joshluq.foundationkit.storage.CacheStorageProvider
-import es.joshluq.foundationkit.storage.SharedPreferencesStorageProvider
 
 /**
  * Internal Service Locator for AuthKit SDK.
@@ -25,9 +29,19 @@ internal class AuthKitComponent(
 
     val serializer: SerializerProvider by lazy { AuthKitDefaults.defaultSerializer }
 
-    // Storage
+    val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = config.storeName)
+
+    val encryptionKit: EncryptionkitManager by lazy {
+        EncryptionkitManager.build(context) {
+            alias = config.encryptionAlias
+            logger = this@AuthKitComponent.logger
+        }
+    }
+
     val persistentStorage: StorageProvider by lazy {
-        val sharedPrefs = config.context.getSharedPreferences(config.storeName, android.content.Context.MODE_PRIVATE)
-        SharedPreferencesStorageProvider(sharedPrefs, serializer)
+        encryptionKit.createSecureStorage(
+            dataStore = context.dataStore,
+            serializerProvider = serializer
+        )
     }
 }

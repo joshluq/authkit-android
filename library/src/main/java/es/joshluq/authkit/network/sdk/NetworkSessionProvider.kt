@@ -8,17 +8,21 @@ import es.joshluq.authkit.session.model.TokenHolder
  */
 interface NetworkSessionProvider {
     /**
-     * Returns the current tokens.
+     * Retrieves the current authentication tokens from the session.
+     *
+     * @return The [TokenHolder] containing the current tokens, or null if no session exists.
      */
     suspend fun getTokens(): TokenHolder?
 
     /**
-     * Saves new tokens (e.g., after a successful refresh).
+     * Saves new authentication tokens, typically invoked after a successful token refresh.
+     *
+     * @param tokens The new [TokenHolder] to be saved in the session.
      */
     suspend fun saveTokens(tokens: TokenHolder)
 
     /**
-     * Clears the session (e.g., after a failed refresh).
+     * Clears the current session, typically invoked when a token refresh fails and the user must be logged out.
      */
     suspend fun clearSession()
 }
