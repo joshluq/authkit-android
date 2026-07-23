@@ -30,6 +30,7 @@ import es.joshluq.authkit.showcase.ui.theme.ShowcaseTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlin.time.Duration.Companion.milliseconds
 
 @Serializable
 data class UserProfile(
@@ -144,10 +145,10 @@ fun SessionScreen(
 
     // Load profile on start
     LaunchedEffect(state) {
-        if (state is SessionState.Active) {
-            userProfile = authKit.session.getSessionData<UserProfile>()
+        userProfile = if (state is SessionState.Active) {
+            authKit.session.getSessionData<UserProfile>()
         } else {
-            userProfile = null
+            null
         }
     }
 
@@ -168,7 +169,7 @@ fun SessionScreen(
             is SessionState.Active -> {
                 secondsRemaining = initialDuration
                 while (secondsRemaining > 0) {
-                    delay(1000)
+                    delay(1000.milliseconds)
                     secondsRemaining--
                 }
             }
@@ -178,10 +179,12 @@ fun SessionScreen(
             SessionState.ExpiringSoon -> {
                 secondsRemaining--
                 while (secondsRemaining > 0) {
-                    delay(1000)
+                    delay(1000.milliseconds)
                     secondsRemaining--
                 }
             }
+
+            else -> {}
         }
     }
 
@@ -230,6 +233,7 @@ fun SessionScreen(
                     containerColor = when (state) {
                         is SessionState.Active -> Color(0xFFE8F5E9)
                         is SessionState.ExpiringSoon -> Color(0xFFFFF3E0)
+                        is SessionState.Initializing -> Color(0xFFE3F2FD)
                         else -> Color(0xFFF5F5F5)
                     }
                 )
@@ -246,11 +250,26 @@ fun SessionScreen(
                         color = when (state) {
                             is SessionState.Active -> Color(0xFF2E7D32)
                             is SessionState.ExpiringSoon -> Color(0xFFEF6C00)
+                            is SessionState.Initializing -> Color(0xFF1976D2)
                             else -> Color.Gray
                         }
                     )
+
+                    if (state is SessionState.Initializing) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(32.dp),
+                            strokeWidth = 3.dp,
+                            color = Color(0xFF1976D2)
+                        )
+                        Text(
+                            text = "Checking session...",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                     
-                    if (isTimed && state !is SessionState.Idle) {
+                    if (isTimed && state !is SessionState.Idle && state !is SessionState.Initializing) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(text = "Approx. time remaining:")
                         Text(
@@ -312,7 +331,11 @@ fun SessionScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state is SessionState.Idle
             ) {
-                Text("Start Session")
+                if (state is SessionState.Initializing) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White)
+                } else {
+                    Text("Start Session")
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))

@@ -75,7 +75,7 @@ class SessionKit internal constructor(
 
     private val mutex = Mutex()
 
-    private val _state = MutableStateFlow<SessionState>(SessionState.Idle)
+    private val _state = MutableStateFlow<SessionState>(SessionState.Initializing)
 
     /**
      * A [StateFlow] representing the current state of the user session.
@@ -183,6 +183,9 @@ class SessionKit internal constructor(
             component.saveTokensUseCase(input).onSuccess {
                 startTimerIfNeeded()
                 _state.value = SessionState.Active
+            }.onFailure {
+                component.logger.e(TAG, "Failed to start session: ${it.message}")
+                _state.value = SessionState.Idle
             }
         }
     }
@@ -249,7 +252,7 @@ class SessionKit internal constructor(
      */
     suspend fun extendSession(tokens: TokenHolder = TokenHolder.withoutToken()) {
         mutex.withLock {
-            if (state.value == SessionState.Idle) {
+            if (state.value !is SessionState.Active && state.value !is SessionState.ExpiringSoon) {
                 component.logger.i(TAG, "Cannot extend session: current state is ${state.value}")
                 return
             }
@@ -258,6 +261,8 @@ class SessionKit internal constructor(
             component.saveTokensUseCase(input).onSuccess {
                 startTimerIfNeeded()
                 _state.value = SessionState.Active
+            }.onFailure {
+                component.logger.e(TAG, "Failed to extend session: ${it.message}")
             }
         }
     }

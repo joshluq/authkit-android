@@ -6,6 +6,11 @@ package es.joshluq.authkit.session.model
 sealed interface SessionState {
 
     /**
+     * Indicates that the session is currently being initialized or restored.
+     */
+    data object Initializing : SessionState
+
+    /**
      * Indicates that the session is currently active and valid.
      */
     data object Active : SessionState

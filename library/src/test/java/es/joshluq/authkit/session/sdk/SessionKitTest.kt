@@ -57,6 +57,11 @@ class SessionKitTest {
     }
 
     @Test
+    fun `initial state should be Initializing`() {
+        assertEquals(SessionState.Initializing, sessionKit.state.value)
+    }
+
+    @Test
     fun `startSession should move state to Active and start timers on success`() = runTest {
         val tokens = TokenHolder()
         coEvery { saveTokensUseCase(any()) } returns Result.success(NoneOutput)
@@ -66,6 +71,16 @@ class SessionKitTest {
         assertEquals(SessionState.Active, sessionKit.state.value)
         verify { sessionTimer.start(1000, null) }
         verify { sessionScheduler.schedule(1000, null) }
+    }
+
+    @Test
+    fun `startSession should move state to Idle on failure`() = runTest {
+        val tokens = TokenHolder()
+        coEvery { saveTokensUseCase(any()) } returns Result.failure(Exception("Storage error"))
+
+        sessionKit.startSession(tokens)
+
+        assertEquals(SessionState.Idle, sessionKit.state.value)
     }
 
     @Test
