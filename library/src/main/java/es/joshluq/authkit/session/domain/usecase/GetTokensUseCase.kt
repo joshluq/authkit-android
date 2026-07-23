@@ -21,7 +21,7 @@ internal class GetTokensUseCase(
             val token = repository.getTokens()
             Output(tokens = token)
         }.onFailure { throwable ->
-            logger.e(TAG, "Error retrieving tokens", throwable)
+            logger.e(TAG, "Error retrieving tokens ${throwable.message}")
         }
     }
 
