@@ -14,9 +14,11 @@ internal object AuthKitDefaults {
 
     private const val TAG = "Authkit"
 
+    const val DEFAULT_ENCRYPTION_ALIAS = "AUTHKIT_DEFAULT_ALIAS"
+
     val logger: LoggerKit by lazy {
         LoggerKit.Builder()
-            .setProvider(LoggerDefaults.defaultLogProvider(tagPrefix = TAG, showThread = false))
+            .addProvider(LoggerDefaults.defaultLogProvider(tagPrefix = TAG, showThread = false))
             .build()
     }
 

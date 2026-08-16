@@ -1,6 +1,7 @@
 package es.joshluq.authkit.sdk
 
 import android.content.Context
+import es.joshluq.encryptionkit.sdk.EncryptionKit
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.manager.ManagerConfig
 
@@ -11,12 +12,12 @@ import es.joshluq.foundationkit.manager.ManagerConfig
  *
  * @property context The application context.
  * @property storeName The name of the preferences store to be used.
- * @property encryptionAlias The alias for the encryption key in the Android Keystore.
+ * @property encryptionKit An optional externally provided [EncryptionKit] instance.
  * @property logger The logger instance for internal SDK logging.
  */
 class AuthKitConfig internal constructor(
     val context: Context,
     val storeName: String,
-    val encryptionAlias: String,
+    val encryptionKit: EncryptionKit? = null,
     val logger: LoggerKit
 ) : ManagerConfig
