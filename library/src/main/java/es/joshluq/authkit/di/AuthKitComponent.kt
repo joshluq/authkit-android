@@ -32,8 +32,8 @@ internal class AuthKitComponent(
     val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = config.storeName)
 
     val encryptionKit: EncryptionKit by lazy {
-        EncryptionKit.build(context) {
-            alias = config.encryptionAlias
+        config.encryptionKit ?: EncryptionKit.build(context) {
+            alias = AuthKitDefaults.DEFAULT_ENCRYPTION_ALIAS
             logger = this@AuthKitComponent.logger
         }
     }

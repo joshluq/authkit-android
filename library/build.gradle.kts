@@ -15,11 +15,15 @@ version = providers.gradleProperty("libraryVersion").get()
 
 configure<LibraryExtension> {
     namespace = "es.joshluq.authkit"
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
-    implementation("es.joshluq.kit:foundationkit:1.3.0")
-    implementation("es.joshluq.kit:encryptionkit:1.3.0")
+    implementation("es.joshluq.kit:foundationkit:1.4.0")
+    api("es.joshluq.kit:encryptionkit:1.4.0")
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.okhttp)

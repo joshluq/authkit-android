@@ -5,6 +5,7 @@ import es.joshluq.authkit.di.AuthKitComponent
 import es.joshluq.authkit.di.AuthKitDefaults
 import es.joshluq.authkit.di.AuthKitLocator
 import es.joshluq.authkit.session.sdk.SessionKit
+import es.joshluq.encryptionkit.sdk.EncryptionKit
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.manager.Manager
 
@@ -16,7 +17,7 @@ import es.joshluq.foundationkit.manager.Manager
 class AuthKit private constructor(
     context: Context,
     private val storeName: String,
-    private val encryptionAlias: String,
+    private val encryptionKit: EncryptionKit? = null,
     private val logger: LoggerKit
 ) : Manager<AuthKitConfig>() {
 
@@ -39,7 +40,14 @@ class AuthKit private constructor(
     }
 
     internal val component: AuthKitComponent by lazy {
-        AuthKitComponent(AuthKitConfig(this.context, storeName, encryptionAlias, logger))
+        AuthKitComponent(
+            AuthKitConfig(
+                context = this.context,
+                storeName = storeName,
+                encryptionKit = encryptionKit,
+                logger = logger
+            )
+        )
     }
 
     @PublishedApi
@@ -80,7 +88,7 @@ class AuthKit private constructor(
      */
     class Builder(private val context: Context) {
         var storeName: String = "auth_kit_store"
-        var encryptionAlias: String = "AUTHKIT_DEFAULT_ALIAS"
+        var encryptionKit: EncryptionKit? = null
         var logger: LoggerKit = AuthKitDefaults.logger
         private val installers = mutableListOf<(AuthKit) -> Unit>()
 
@@ -108,7 +116,12 @@ class AuthKit private constructor(
          * @return A fully initialized [AuthKit].
          */
         fun build(): AuthKit {
-            val authKit = AuthKit(context, storeName, encryptionAlias, logger)
+            val authKit = AuthKit(
+                context = context,
+                storeName = storeName,
+                encryptionKit = encryptionKit,
+                logger = logger
+            )
             installers.forEach { it(authKit) }
             return authKit
         }
