@@ -21,9 +21,8 @@ import es.joshluq.foundationkit.manager.ManagerConfig
 class SessionKitConfig internal constructor(
     val persistence: PersistencePolicy = PersistencePolicy.Persistent,
     val expiration: ExpirationPolicy = ExpirationPolicy.Never,
-    val interactions: InteractionPolicy = InteractionPolicy.None
+    val interactions: InteractionPolicy = InteractionPolicy.None,
 ) : ManagerConfig {
-
     /**
      * Builder class for creating instances of [SessionKitConfig].
      */
@@ -39,11 +38,12 @@ class SessionKitConfig internal constructor(
          *
          * @return The configured [SessionKitConfig].
          */
-        fun build(): SessionKitConfig = SessionKitConfig(
-            persistence = persistence,
-            expiration = expiration,
-            interactions = interactions
-        )
+        fun build(): SessionKitConfig =
+            SessionKitConfig(
+                persistence = persistence,
+                expiration = expiration,
+                interactions = interactions,
+            )
     }
 
     companion object {
@@ -53,7 +53,6 @@ class SessionKitConfig internal constructor(
          * @param block The configuration block applied to the builder.
          * @return The configured [SessionKitConfig].
          */
-        inline fun build(block: Builder.() -> Unit): SessionKitConfig =
-            Builder().apply(block).build()
+        inline fun build(block: Builder.() -> Unit): SessionKitConfig = Builder().apply(block).build()
     }
 }

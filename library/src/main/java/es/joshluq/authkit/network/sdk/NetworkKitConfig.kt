@@ -12,9 +12,8 @@ import es.joshluq.foundationkit.manager.ManagerConfig
  */
 class NetworkKitConfig internal constructor(
     val tokenRefresher: TokenRefresher? = null,
-    val sessionProvider: NetworkSessionProvider? = null
+    val sessionProvider: NetworkSessionProvider? = null,
 ) : ManagerConfig {
-
     /**
      * Builder class for creating instances of [NetworkKitConfig].
      */
@@ -30,10 +29,11 @@ class NetworkKitConfig internal constructor(
          *
          * @return The configured [NetworkKitConfig].
          */
-        fun build(): NetworkKitConfig = NetworkKitConfig(
-            tokenRefresher = tokenRefresher,
-            sessionProvider = sessionProvider
-        )
+        fun build(): NetworkKitConfig =
+            NetworkKitConfig(
+                tokenRefresher = tokenRefresher,
+                sessionProvider = sessionProvider,
+            )
     }
 
     companion object {
@@ -43,7 +43,6 @@ class NetworkKitConfig internal constructor(
          * @param block The configuration block applied to the builder.
          * @return The configured [NetworkKitConfig].
          */
-        inline fun build(block: Builder.() -> Unit): NetworkKitConfig =
-            Builder().apply(block).build()
+        inline fun build(block: Builder.() -> Unit): NetworkKitConfig = Builder().apply(block).build()
     }
 }

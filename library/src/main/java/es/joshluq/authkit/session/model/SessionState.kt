@@ -4,7 +4,6 @@ package es.joshluq.authkit.session.model
  * Represents the current state of a user session within the AuthKit ecosystem.
  */
 sealed interface SessionState {
-
     /**
      * Indicates that the session is currently being initialized or restored.
      */

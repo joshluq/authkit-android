@@ -9,11 +9,10 @@ import es.joshluq.foundationkit.usecase.UseCaseOutput
 
 internal class GetSessionDataUseCase(
     private val repository: TokenRepository,
-    private val logger: LoggerKit
+    private val logger: LoggerKit,
 ) : UseCase<GetSessionDataUseCase.Input<*>, GetSessionDataUseCase.Output<*>> {
-
-    override suspend fun invoke(input: Input<*>): Result<Output<*>> {
-        return runCatching {
+    override suspend fun invoke(input: Input<*>): Result<Output<*>> =
+        runCatching {
             @Suppress("UNCHECKED_CAST")
             val clazz = input.clazz as Class<SessionData>
             val data = repository.getSessionData(clazz)
@@ -21,8 +20,12 @@ internal class GetSessionDataUseCase(
         }.onFailure {
             logger.e("GetSessionDataUseCase", "Error retrieving session data", it)
         }
-    }
 
-    data class Input<T : SessionData>(val clazz: Class<T>) : UseCaseInput
-    data class Output<T : SessionData>(val data: T?) : UseCaseOutput
+    data class Input<T : SessionData>(
+        val clazz: Class<T>,
+    ) : UseCaseInput
+
+    data class Output<T : SessionData>(
+        val data: T?,
+    ) : UseCaseOutput
 }

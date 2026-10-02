@@ -85,3 +85,4 @@ captures/
 # Archivos generados por Google Services (pueden contener información sensible)
 google-services.json
 
+/.artifacts/

@@ -14,5 +14,8 @@ interface AuthKitPlugin<TConfig : Any, TInstance : Any> {
      * @param config The plugin configuration.
      * @return The plugin instance.
      */
-    fun install(authKit: AuthKit, config: TConfig): TInstance
+    fun install(
+        authKit: AuthKit,
+        config: TConfig,
+    ): TInstance
 }

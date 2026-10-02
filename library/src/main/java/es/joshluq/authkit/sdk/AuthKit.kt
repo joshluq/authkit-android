@@ -18,9 +18,8 @@ class AuthKit private constructor(
     context: Context,
     private val storeName: String,
     private val encryptionKit: EncryptionKit? = null,
-    private val logger: LoggerKit
+    private val logger: LoggerKit,
 ) : Manager<AuthKitConfig>() {
-
     val context: Context = context.applicationContext
 
     companion object {
@@ -32,11 +31,13 @@ class AuthKit private constructor(
          * @return The configured and initialized [AuthKit] instance.
          */
         @JvmStatic
-        fun init(context: Context, block: Builder.() -> Unit): AuthKit {
-            return Builder(context).apply(block).build().also {
+        fun init(
+            context: Context,
+            block: Builder.() -> Unit,
+        ): AuthKit =
+            Builder(context).apply(block).build().also {
                 AuthKitLocator.register(it)
             }
-        }
     }
 
     internal val component: AuthKitComponent by lazy {
@@ -45,8 +46,8 @@ class AuthKit private constructor(
                 context = this.context,
                 storeName = storeName,
                 encryptionKit = encryptionKit,
-                logger = logger
-            )
+                logger = logger,
+            ),
         )
     }
 
@@ -66,9 +67,7 @@ class AuthKit private constructor(
      * @param T The type of the plugin to retrieve.
      * @return The plugin instance of type [T], or null if it's not registered.
      */
-    inline fun <reified T : Any> plugin(): T? {
-        return plugins[T::class.java] as? T
-    }
+    inline fun <reified T : Any> plugin(): T? = plugins[T::class.java] as? T
 
     /**
      * Internal method to register a plugin instance.
@@ -76,7 +75,10 @@ class AuthKit private constructor(
      * @param pluginClass The class of the plugin being registered.
      * @param instance The plugin instance to associate with the class.
      */
-    internal fun registerPlugin(pluginClass: Class<*>, instance: Any) {
+    internal fun registerPlugin(
+        pluginClass: Class<*>,
+        instance: Any,
+    ) {
         plugins[pluginClass] = instance
     }
 
@@ -86,7 +88,9 @@ class AuthKit private constructor(
      *
      * @property context The application context.
      */
-    class Builder(private val context: Context) {
+    class Builder(
+        private val context: Context,
+    ) {
         var storeName: String = "auth_kit_store"
         var encryptionKit: EncryptionKit? = null
         var logger: LoggerKit = AuthKitDefaults.logger
@@ -102,7 +106,7 @@ class AuthKit private constructor(
          */
         fun <TConfig : Any, TInstance : Any> addFeature(
             plugin: AuthKitPlugin<TConfig, TInstance>,
-            config: TConfig
+            config: TConfig,
         ) {
             installers.add { authKit ->
                 val instance = plugin.install(authKit, config)
@@ -116,12 +120,13 @@ class AuthKit private constructor(
          * @return A fully initialized [AuthKit].
          */
         fun build(): AuthKit {
-            val authKit = AuthKit(
-                context = context,
-                storeName = storeName,
-                encryptionKit = encryptionKit,
-                logger = logger
-            )
+            val authKit =
+                AuthKit(
+                    context = context,
+                    storeName = storeName,
+                    encryptionKit = encryptionKit,
+                    logger = logger,
+                )
             installers.forEach { it(authKit) }
             return authKit
         }

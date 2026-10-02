@@ -8,9 +8,8 @@ import android.os.Build
 import es.joshluq.authkit.session.receiver.SessionAlarmReceiver
 
 internal class SessionAlarmScheduler(
-    private val context: Context
+    private val context: Context,
 ) : SessionScheduler {
-
     companion object {
         const val EXPIRATION_REQUEST_CODE = 1001
         const val WARNING_REQUEST_CODE = 1002
@@ -18,7 +17,10 @@ internal class SessionAlarmScheduler(
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    override fun schedule(totalDuration: Long, warningBefore: Long?) {
+    override fun schedule(
+        totalDuration: Long,
+        warningBefore: Long?,
+    ) {
         cancelAll()
 
         // Expiration Alarm
@@ -33,16 +35,22 @@ internal class SessionAlarmScheduler(
         }
     }
 
-    private fun scheduleAlarm(delay: Long, action: String, requestCode: Int) {
-        val intent = Intent(context, SessionAlarmReceiver::class.java).apply {
-            this.action = action
-        }
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            requestCode,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+    private fun scheduleAlarm(
+        delay: Long,
+        action: String,
+        requestCode: Int,
+    ) {
+        val intent =
+            Intent(context, SessionAlarmReceiver::class.java).apply {
+                this.action = action
+            }
+        val pendingIntent =
+            PendingIntent.getBroadcast(
+                context,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
 
         val triggerAt = System.currentTimeMillis() + delay
 
@@ -53,27 +61,28 @@ internal class SessionAlarmScheduler(
         }
     }
 
-    private fun canScheduleExactAlarms(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    private fun canScheduleExactAlarms(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             alarmManager.canScheduleExactAlarms()
         } else {
             true
         }
-    }
 
     override fun cancelAll() {
-        val alarms = listOf(
-            EXPIRATION_REQUEST_CODE to SessionAlarmReceiver.ACTION_SESSION_EXPIRATION,
-            WARNING_REQUEST_CODE to SessionAlarmReceiver.ACTION_SESSION_WARNING
-        )
+        val alarms =
+            listOf(
+                EXPIRATION_REQUEST_CODE to SessionAlarmReceiver.ACTION_SESSION_EXPIRATION,
+                WARNING_REQUEST_CODE to SessionAlarmReceiver.ACTION_SESSION_WARNING,
+            )
         alarms.forEach { (code, action) ->
             val intent = Intent(context, SessionAlarmReceiver::class.java).apply { this.action = action }
-            val pendingIntent = PendingIntent.getBroadcast(
-                context,
-                code,
-                intent,
-                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
-            )
+            val pendingIntent =
+                PendingIntent.getBroadcast(
+                    context,
+                    code,
+                    intent,
+                    PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
+                )
             pendingIntent?.let { alarmManager.cancel(it) }
         }
     }

@@ -16,5 +16,8 @@ sealed interface ExpirationPolicy {
      * @property warningThresholdMillis An optional threshold in milliseconds before
      * expiration to trigger a warning (e.g., [SessionState.ExpiringSoon]).
      */
-    data class Timed(val durationMillis: Long, val warningThresholdMillis: Long? = null) : ExpirationPolicy
+    data class Timed(
+        val durationMillis: Long,
+        val warningThresholdMillis: Long? = null,
+    ) : ExpirationPolicy
 }
