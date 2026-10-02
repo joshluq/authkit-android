@@ -40,6 +40,8 @@ class NetworkKit internal constructor(
         config.sessionProvider ?: DefaultSessionProvider(AuthKitLocator.resolveSessionKit())
     }
 
+    private val refreshLock = Any()
+
     init {
         this.config = config
     }
@@ -81,7 +83,7 @@ class NetworkKit internal constructor(
 
                 val refresher = config.tokenRefresher ?: return null
 
-                synchronized(this) {
+                synchronized(refreshLock) {
                     return runBlocking {
                         val currentTokens = sessionProvider.getTokens() ?: return@runBlocking null
                         val accessToken = currentTokens.getAccessToken()?.value

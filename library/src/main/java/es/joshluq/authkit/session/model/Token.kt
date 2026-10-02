@@ -16,7 +16,9 @@ sealed interface Token {
      */
     data class Access(
         override val value: String,
-    ) : Token
+    ) : Token {
+        override fun toString(): String = "Token.Access(value=***REDACTED***)"
+    }
 
     /**
      * A Refresh Token typically used to obtain a new Access Token.
@@ -25,7 +27,9 @@ sealed interface Token {
      */
     data class Refresh(
         override val value: String,
-    ) : Token
+    ) : Token {
+        override fun toString(): String = "Token.Refresh(value=***REDACTED***)"
+    }
 
     /**
      * A Custom Token that doesn't fit the standard Access/Refresh semantics.
@@ -36,5 +40,7 @@ sealed interface Token {
     data class Custom(
         val name: String,
         override val value: String,
-    ) : Token
+    ) : Token {
+        override fun toString(): String = "Token.Custom(name=$name, value=***REDACTED***)"
+    }
 }

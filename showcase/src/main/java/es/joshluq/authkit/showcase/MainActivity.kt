@@ -43,9 +43,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         val app = application as ShowcaseApp
-        
+
         setContent {
             ShowcaseTheme {
                 Surface(
@@ -157,7 +157,9 @@ fun SessionScreen(
     val isTimed = preset.expiration is ExpirationPolicy.Timed
     val initialDuration = if (preset.expiration is ExpirationPolicy.Timed) {
         (preset.expiration.durationMillis / 1000).toInt()
-    } else 0
+    } else {
+        0
+    }
 
     LaunchedEffect(state) {
         if (!isTimed) {
@@ -268,7 +270,7 @@ fun SessionScreen(
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }
-                    
+
                     if (isTimed && state !is SessionState.Idle && state !is SessionState.Initializing) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(text = "Approx. time remaining:")
@@ -301,7 +303,8 @@ fun SessionScreen(
                             Button(
                                 onClick = {
                                     scope.launch {
-                                        val profile = UserProfile("Josh Luq", "josh@example.com", System.currentTimeMillis())
+                                        val profile =
+                                            UserProfile("Josh Luq", "josh@example.com", System.currentTimeMillis())
                                         authKit.session.saveSessionData(profile)
                                         userProfile = profile
                                     }
@@ -374,7 +377,7 @@ fun SessionScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             val keepAlive = remember { authKit.session.keepAlive() }
-            
+
             if (isTimed) {
                 Button(
                     onClick = {

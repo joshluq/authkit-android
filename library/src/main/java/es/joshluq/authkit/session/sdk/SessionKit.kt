@@ -76,6 +76,9 @@ class SessionKit internal constructor(
 
     private val mutex = Mutex()
 
+    @Volatile
+    private var cachedTokens: TokenHolder? = null
+
     private val _state = MutableStateFlow<SessionState>(SessionState.Initializing)
 
     /**
@@ -111,6 +114,7 @@ class SessionKit internal constructor(
                     .getTokensUseCase(NoneInput)
                     .onSuccess { output ->
                         if (!output.tokens.isEmpty()) {
+                            cachedTokens = output.tokens
                             component.logger.i(TAG, "Active session detected during initialization. Restoring state.")
                             _state.value = SessionState.Active
 
@@ -118,9 +122,11 @@ class SessionKit internal constructor(
                                 startTimerIfNeeded()
                             }
                         } else {
+                            cachedTokens = null
                             _state.value = SessionState.Idle
                         }
                     }.onFailure {
+                        cachedTokens = null
                         component.logger.e(TAG, "Failed to restore session: ${it.message}")
                         _state.value = SessionState.Idle
                     }
@@ -186,9 +192,11 @@ class SessionKit internal constructor(
             component
                 .saveTokensUseCase(input)
                 .onSuccess {
+                    cachedTokens = tokens
                     startTimerIfNeeded()
                     _state.value = SessionState.Active
                 }.onFailure {
+                    cachedTokens = null
                     component.logger.e(TAG, "Failed to start session: ${it.message}")
                     _state.value = SessionState.Idle
                 }
@@ -200,9 +208,7 @@ class SessionKit internal constructor(
      */
     private fun startTimerIfNeeded() {
         when (val timerConfig = config.expiration) {
-            ExpirationPolicy.Never -> {
-                Unit
-            }
+            ExpirationPolicy.Never -> {}
 
             is ExpirationPolicy.Timed -> {
                 component.logger.i(TAG, "Start Timer and Scheduler with duration: ${timerConfig.durationMillis}ms")
@@ -234,6 +240,7 @@ class SessionKit internal constructor(
     private suspend fun endSessionInternal() {
         component.logger.i(TAG, "Ending session and clearing data.")
         component.clearSessionUseCase(NoneInput).onSuccess {
+            cachedTokens = null
             endTimerIfNeeded()
             _state.value = SessionState.Idle
         }
@@ -244,9 +251,7 @@ class SessionKit internal constructor(
      */
     private fun endTimerIfNeeded() {
         when (config.expiration) {
-            ExpirationPolicy.Never -> {
-                Unit
-            }
+            ExpirationPolicy.Never -> {}
 
             is ExpirationPolicy.Timed -> {
                 component.logger.i(TAG, "Stop Timer and Scheduler")
@@ -272,6 +277,7 @@ class SessionKit internal constructor(
             component
                 .saveTokensUseCase(input)
                 .onSuccess {
+                    cachedTokens = tokens
                     startTimerIfNeeded()
                     _state.value = SessionState.Active
                 }.onFailure {
@@ -319,7 +325,14 @@ class SessionKit internal constructor(
      *
      * @return The [TokenHolder] if a session exists and tokens are available, null otherwise.
      */
-    suspend fun getTokens(): TokenHolder? = component.getTokensUseCase(NoneInput).getOrNull()?.tokens
+    suspend fun getTokens(): TokenHolder? {
+        cachedTokens?.let { return it }
+        return mutex.withLock {
+            cachedTokens ?: component.getTokensUseCase(NoneInput).getOrNull()?.tokens?.also {
+                cachedTokens = it
+            }
+        }
+    }
 
     /**
      * Returns the component used to keep the session alive by notifying user activity.

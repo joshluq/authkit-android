@@ -120,4 +120,11 @@ class TokenHolder {
      * @return True if the specified Custom token exists, false otherwise.
      */
     fun hasCustomToken(name: String): Boolean = tokens.containsKey(name)
+
+    /**
+     * Clears all tokens stored in this holder.
+     */
+    fun clear() {
+        tokens.clear()
+    }
 }
