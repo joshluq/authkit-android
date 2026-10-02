@@ -19,5 +19,5 @@ class AuthKitConfig internal constructor(
     val context: Context,
     val storeName: String,
     val encryptionKit: EncryptionKit? = null,
-    val logger: LoggerKit
+    val logger: LoggerKit,
 ) : ManagerConfig

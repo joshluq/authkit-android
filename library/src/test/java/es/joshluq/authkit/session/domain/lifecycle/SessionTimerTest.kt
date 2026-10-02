@@ -17,7 +17,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionTimerTest {
-
     private val logger: LoggerKit = mockk(relaxed = true)
     private val testScope = TestScope()
     private val sessionKit: SessionKit = mockk(relaxed = true)
@@ -35,13 +34,14 @@ class SessionTimerTest {
     }
 
     @Test
-    fun `timer should notify sessionKit after specified delays`() = testScope.runTest {
-        timer.start(durationMillis = 1000, warningThresholdMillis = 400)
+    fun `timer should notify sessionKit after specified delays`() =
+        testScope.runTest {
+            timer.start(durationMillis = 1000, warningThresholdMillis = 400)
 
-        advanceTimeBy(601) // Duration - Warning = 600
-        coVerify(exactly = 1) { sessionKit.onPreExpirationDetected() }
+            advanceTimeBy(601) // Duration - Warning = 600
+            coVerify(exactly = 1) { sessionKit.onPreExpirationDetected() }
 
-        advanceTimeBy(401)
-        coVerify(exactly = 1) { sessionKit.onExpirationDetected() }
-    }
+            advanceTimeBy(401)
+            coVerify(exactly = 1) { sessionKit.onExpirationDetected() }
+        }
 }

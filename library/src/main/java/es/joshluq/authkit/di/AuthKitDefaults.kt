@@ -11,31 +11,38 @@ import kotlinx.serialization.serializer
  * Strictly follows the 'Defaults' pattern for internal configuration.
  */
 internal object AuthKitDefaults {
-
     private const val TAG = "Authkit"
 
     const val DEFAULT_ENCRYPTION_ALIAS = "AUTHKIT_DEFAULT_ALIAS"
 
     val logger: LoggerKit by lazy {
-        LoggerKit.Builder()
+        LoggerKit
+            .Builder()
             .addProvider(LoggerDefaults.defaultLogProvider(tagPrefix = TAG, showThread = false))
             .build()
     }
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-        coerceInputValues = true
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            coerceInputValues = true
+        }
 
     val defaultSerializer: SerializerProvider by lazy {
         object : SerializerProvider {
-            override fun <T : Any> serialize(value: T, type: Class<T>): String {
+            override fun <T : Any> serialize(
+                value: T,
+                type: Class<T>,
+            ): String {
                 val serializer = json.serializersModule.serializer(type)
                 return json.encodeToString(serializer, value)
             }
 
             @Suppress("UNCHECKED_CAST")
-            override fun <T : Any> deserialize(value: String, type: Class<T>): T {
+            override fun <T : Any> deserialize(
+                value: String,
+                type: Class<T>,
+            ): T {
                 val serializer = json.serializersModule.serializer(type)
                 return json.decodeFromString(serializer, value) as T
             }

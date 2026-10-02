@@ -14,5 +14,7 @@ sealed interface InteractionPolicy {
      *
      * @property throttleIntervalMillis Minimum time between interaction notifications to avoid overhead.
      */
-    data class Timed(val throttleIntervalMillis: Long = 5000L) : InteractionPolicy
+    data class Timed(
+        val throttleIntervalMillis: Long = 5000L,
+    ) : InteractionPolicy
 }

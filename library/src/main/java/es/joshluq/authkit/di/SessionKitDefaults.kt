@@ -10,22 +10,23 @@ internal typealias ComponentFactory = (
     StorageProvider,
     StorageProvider,
     Context,
-    LoggerKit
+    LoggerKit,
 ) -> SessionKitComponent
 
 object SessionKitDefaults {
-
-    internal val factory: ComponentFactory = { session: SessionKitConfig,
+    internal val factory: ComponentFactory = {
+            session: SessionKitConfig,
             persistentStorage: StorageProvider,
             transientStorage: StorageProvider,
             context: Context,
-            logger: LoggerKit ->
+            logger: LoggerKit,
+        ->
         SessionKitComponent(
             config = session,
             context = context,
             persistentStorage = persistentStorage,
             transientStorage = transientStorage,
-            logger = logger
+            logger = logger,
         )
     }
 }

@@ -11,7 +11,11 @@ import kotlinx.coroutines.launch
  * Interface for the session timer that handles foreground expiration.
  */
 internal interface SessionTimer {
-    fun start(durationMillis: Long, warningThresholdMillis: Long?)
+    fun start(
+        durationMillis: Long,
+        warningThresholdMillis: Long?,
+    )
+
     fun stop()
 }
 
@@ -20,29 +24,32 @@ internal interface SessionTimer {
  */
 internal class SessionTimerImpl(
     private val scope: CoroutineScope,
-    private val logger: LoggerKit
+    private val logger: LoggerKit,
 ) : SessionTimer {
-
     private var timerJob: Job? = null
 
-    override fun start(durationMillis: Long, warningThresholdMillis: Long?) {
+    override fun start(
+        durationMillis: Long,
+        warningThresholdMillis: Long?,
+    ) {
         stop()
-        timerJob = scope.launch {
-            logger.i(TAG, "Starting session timer: duration=$durationMillis, warning=$warningThresholdMillis")
-            val sessionKit = AuthKitLocator.resolveSessionKit()
+        timerJob =
+            scope.launch {
+                logger.i(TAG, "Starting session timer: duration=$durationMillis, warning=$warningThresholdMillis")
+                val sessionKit = AuthKitLocator.resolveSessionKit()
 
-            if (warningThresholdMillis != null && warningThresholdMillis < durationMillis) {
-                val warningDelay = durationMillis - warningThresholdMillis
-                delay(warningDelay)
-                logger.i(TAG, "Notifying PreExpiration from timer")
-                sessionKit.onPreExpirationDetected()
-                delay(warningThresholdMillis)
-            } else {
-                delay(durationMillis)
+                if (warningThresholdMillis != null && warningThresholdMillis < durationMillis) {
+                    val warningDelay = durationMillis - warningThresholdMillis
+                    delay(warningDelay)
+                    logger.i(TAG, "Notifying PreExpiration from timer")
+                    sessionKit.onPreExpirationDetected()
+                    delay(warningThresholdMillis)
+                } else {
+                    delay(durationMillis)
+                }
+                logger.i(TAG, "Notifying Expiration from timer")
+                sessionKit.onExpirationDetected()
             }
-            logger.i(TAG, "Notifying Expiration from timer")
-            sessionKit.onExpirationDetected()
-        }
     }
 
     override fun stop() {

@@ -9,15 +9,14 @@ import es.joshluq.foundationkit.usecase.UseCaseInput
 
 internal class SaveTokensUseCase(
     private val repository: TokenRepository,
-    private val logger: LoggerKit
+    private val logger: LoggerKit,
 ) : UseCase<SaveTokensUseCase.Input, NoneOutput> {
-
     companion object {
         private const val TAG = "SaveTokensUseCase"
     }
 
-    override suspend fun invoke(input: Input): Result<NoneOutput> {
-        return runCatching {
+    override suspend fun invoke(input: Input): Result<NoneOutput> =
+        runCatching {
             val tokens = input.tokens
             require(!tokens.isEmpty()) {
                 "Tokens cannot be empty"
@@ -27,7 +26,8 @@ internal class SaveTokensUseCase(
         }.onFailure { throwable ->
             logger.e(TAG, "Error saving tokens", throwable)
         }
-    }
 
-    data class Input(val tokens: TokenHolder) : UseCaseInput
+    data class Input(
+        val tokens: TokenHolder,
+    ) : UseCaseInput
 }

@@ -10,10 +10,17 @@ import es.joshluq.authkit.session.model.TokenHolder
 import es.joshluq.authkit.session.scheduler.SessionScheduler
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.NoneOutput
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.*
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -21,11 +28,11 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionKitTest {
-
     private lateinit var sessionKit: SessionKit
-    private val config = SessionKitConfig.build {
-        expiration = ExpirationPolicy.Timed(durationMillis = 1000)
-    }
+    private val config =
+        SessionKitConfig.build {
+            expiration = ExpirationPolicy.Timed(durationMillis = 1000)
+        }
 
     private val component: SessionKitComponent = mockk(relaxed = true)
     private val saveTokensUseCase: SaveTokensUseCase = mockk()
@@ -39,7 +46,7 @@ class SessionKitTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        
+
         every { component.saveTokensUseCase } returns saveTokensUseCase
         every { component.clearSessionUseCase } returns clearSessionUseCase
         every { component.sessionTimer } returns sessionTimer
@@ -62,72 +69,78 @@ class SessionKitTest {
     }
 
     @Test
-    fun `startSession should move state to Active and start timers on success`() = runTest {
-        val tokens = TokenHolder()
-        coEvery { saveTokensUseCase(any()) } returns Result.success(NoneOutput)
+    fun `startSession should move state to Active and start timers on success`() =
+        runTest {
+            val tokens = TokenHolder()
+            coEvery { saveTokensUseCase(any()) } returns Result.success(NoneOutput)
 
-        sessionKit.startSession(tokens)
+            sessionKit.startSession(tokens)
 
-        assertEquals(SessionState.Active, sessionKit.state.value)
-        verify { sessionTimer.start(1000, null) }
-        verify { sessionScheduler.schedule(1000, null) }
-    }
-
-    @Test
-    fun `startSession should move state to Idle on failure`() = runTest {
-        val tokens = TokenHolder()
-        coEvery { saveTokensUseCase(any()) } returns Result.failure(Exception("Storage error"))
-
-        sessionKit.startSession(tokens)
-
-        assertEquals(SessionState.Idle, sessionKit.state.value)
-    }
+            assertEquals(SessionState.Active, sessionKit.state.value)
+            verify { sessionTimer.start(1000, null) }
+            verify { sessionScheduler.schedule(1000, null) }
+        }
 
     @Test
-    fun `endSession should move state to Idle and stop timers on success`() = runTest {
-        coEvery { saveTokensUseCase(any()) } returns Result.success(NoneOutput)
-        sessionKit.startSession(TokenHolder())
+    fun `startSession should move state to Idle on failure`() =
+        runTest {
+            val tokens = TokenHolder()
+            coEvery { saveTokensUseCase(any()) } returns Result.failure(Exception("Storage error"))
 
-        coEvery { clearSessionUseCase(any()) } returns Result.success(NoneOutput)
+            sessionKit.startSession(tokens)
 
-        sessionKit.endSession()
-
-        assertEquals(SessionState.Idle, sessionKit.state.value)
-        verify { sessionTimer.stop() }
-        verify { sessionScheduler.cancelAll() }
-    }
+            assertEquals(SessionState.Idle, sessionKit.state.value)
+        }
 
     @Test
-    fun `onPreExpirationDetected should move state to ExpiringSoon if Active`() = runTest {
-        coEvery { saveTokensUseCase(any()) } returns Result.success(NoneOutput)
-        sessionKit.startSession(TokenHolder())
+    fun `endSession should move state to Idle and stop timers on success`() =
+        runTest {
+            coEvery { saveTokensUseCase(any()) } returns Result.success(NoneOutput)
+            sessionKit.startSession(TokenHolder())
 
-        sessionKit.onPreExpirationDetected()
+            coEvery { clearSessionUseCase(any()) } returns Result.success(NoneOutput)
 
-        assertEquals(SessionState.ExpiringSoon, sessionKit.state.value)
-    }
+            sessionKit.endSession()
 
-    @Test
-    fun `onExpirationDetected should move state to Idle if not Idle`() = runTest {
-        coEvery { saveTokensUseCase(any()) } returns Result.success(NoneOutput)
-        sessionKit.startSession(TokenHolder())
-        coEvery { clearSessionUseCase(any()) } returns Result.success(NoneOutput)
-
-        sessionKit.onExpirationDetected()
-
-        assertEquals(SessionState.Idle, sessionKit.state.value)
-    }
+            assertEquals(SessionState.Idle, sessionKit.state.value)
+            verify { sessionTimer.stop() }
+            verify { sessionScheduler.cancelAll() }
+        }
 
     @Test
-    fun `onUserActivityDetected should reset timers and move state to Active if not Idle`() = runTest {
-        coEvery { saveTokensUseCase(any()) } returns Result.success(NoneOutput)
-        sessionKit.startSession(TokenHolder())
-        sessionKit.onPreExpirationDetected()
-        assertEquals(SessionState.ExpiringSoon, sessionKit.state.value)
+    fun `onPreExpirationDetected should move state to ExpiringSoon if Active`() =
+        runTest {
+            coEvery { saveTokensUseCase(any()) } returns Result.success(NoneOutput)
+            sessionKit.startSession(TokenHolder())
 
-        sessionKit.onUserActivityDetected()
+            sessionKit.onPreExpirationDetected()
 
-        assertEquals(SessionState.Active, sessionKit.state.value)
-        verify(atLeast = 2) { sessionTimer.start(any(), any()) }
-    }
+            assertEquals(SessionState.ExpiringSoon, sessionKit.state.value)
+        }
+
+    @Test
+    fun `onExpirationDetected should move state to Idle if not Idle`() =
+        runTest {
+            coEvery { saveTokensUseCase(any()) } returns Result.success(NoneOutput)
+            sessionKit.startSession(TokenHolder())
+            coEvery { clearSessionUseCase(any()) } returns Result.success(NoneOutput)
+
+            sessionKit.onExpirationDetected()
+
+            assertEquals(SessionState.Idle, sessionKit.state.value)
+        }
+
+    @Test
+    fun `onUserActivityDetected should reset timers and move state to Active if not Idle`() =
+        runTest {
+            coEvery { saveTokensUseCase(any()) } returns Result.success(NoneOutput)
+            sessionKit.startSession(TokenHolder())
+            sessionKit.onPreExpirationDetected()
+            assertEquals(SessionState.ExpiringSoon, sessionKit.state.value)
+
+            sessionKit.onUserActivityDetected()
+
+            assertEquals(SessionState.Active, sessionKit.state.value)
+            verify(atLeast = 2) { sessionTimer.start(any(), any()) }
+        }
 }

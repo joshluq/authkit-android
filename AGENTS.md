@@ -29,3 +29,14 @@ AuthKit is the comprehensive solution for user authentication in our suite. It s
 *   **Abstract Complexity:** Hide the implementation details of third-party social SDKs or system biometric APIs behind clean, domain-specific abstractions.
 *   **Avoid Leaky Security:** Do not expose raw tokens or sensitive implementation details in the public API; provide safe ways to interact with the authenticated state.
 *   Maintain the "Consumer-Driven" pattern used in the project structure (validating auth flows and session persistence via the showcase app).
+
+### Specialized Agent Skills (`.agents/skills/`)
+When executing domain-specific tasks, invoke and adhere to the project's specialized skills:
+*   **Security Audits & PR Reviews:** Use `authkit-security-audit` to inspect credential storage, prevent token leaks in public APIs, verify log redaction, and ensure memory hygiene.
+*   **New Auth Providers & Plugins:** Use `authkit-provider-scaffold` when adding authentication providers (Biometrics, Social Login, Passkeys, SSO) conforming to `AuthKitPlugin<TConfig, TInstance>` and Clean Architecture.
+*   **Session Lifecycle & Concurrency Verification:** Use `authkit-session-verification` to validate token refresh race conditions (401s), foreground tickers vs background `AlarmManager`, and persistence policies (`Transient` vs `Persistent`).
+*   **Release & Publishing Pipeline:** Use `android-release-pipeline` to run static analysis (`detekt`), unit tests, and Fastlane publishing to GitHub Packages.
+
+### Global Tools
+*   **Android CLI (`android-cli`):** Use for emulator lifecycle, running journey tests, inspecting UI layouts (`android layout`), and capturing showcase app screens.
+

@@ -6,8 +6,10 @@ import android.content.Intent
 import es.joshluq.authkit.di.AuthKitLocator
 
 internal class SessionAlarmReceiver : BroadcastReceiver() {
-
-    override fun onReceive(context: Context, intent: Intent) {
+    override fun onReceive(
+        context: Context,
+        intent: Intent,
+    ) {
         val action = intent.action ?: return
 
         // Recover SessionKit via Service Locator
@@ -18,6 +20,7 @@ internal class SessionAlarmReceiver : BroadcastReceiver() {
                 // Direct call to mediator method
                 sessionKit.onExpirationDetected()
             }
+
             ACTION_SESSION_WARNING -> {
                 // Direct call to mediator method
                 sessionKit.onPreExpirationDetected()

@@ -18,9 +18,8 @@ import okhttp3.Route
  * and silent token refresh using OkHttp.
  */
 class NetworkKit internal constructor(
-    config: NetworkKitConfig
+    config: NetworkKitConfig,
 ) : Manager<NetworkKitConfig>() {
-
     companion object : AuthKitPlugin<NetworkKitConfig, NetworkKit> {
         private const val MAX_RETRIES = 3
 
@@ -31,9 +30,10 @@ class NetworkKit internal constructor(
          * @param config The configuration for the NetworkKit.
          * @return The configured and initialized [NetworkKit] instance.
          */
-        override fun install(authKit: AuthKit, config: NetworkKitConfig): NetworkKit {
-            return NetworkKit(config)
-        }
+        override fun install(
+            authKit: AuthKit,
+            config: NetworkKitConfig,
+        ): NetworkKit = NetworkKit(config)
     }
 
     private val sessionProvider: NetworkSessionProvider by lazy {
@@ -50,17 +50,18 @@ class NetworkKit internal constructor(
      *
      * @return The [Interceptor] configured for token injection.
      */
-    fun interceptor(): Interceptor = Interceptor { chain ->
-        val tokens = runBlocking { sessionProvider.getTokens() }
-        val accessToken = tokens?.getAccessToken()?.value
+    fun interceptor(): Interceptor =
+        Interceptor { chain ->
+            val tokens = runBlocking { sessionProvider.getTokens() }
+            val accessToken = tokens?.getAccessToken()?.value
 
-        val requestBuilder = chain.request().newBuilder()
-        if (accessToken != null) {
-            requestBuilder.header("Authorization", "Bearer $accessToken")
+            val requestBuilder = chain.request().newBuilder()
+            if (accessToken != null) {
+                requestBuilder.header("Authorization", "Bearer $accessToken")
+            }
+
+            chain.proceed(requestBuilder.build())
         }
-
-        chain.proceed(requestBuilder.build())
-    }
 
     /**
      * Returns an OkHttp [Authenticator] that handles HTTP 401 Unauthorized errors.
@@ -70,43 +71,49 @@ class NetworkKit internal constructor(
      *
      * @return The [Authenticator] configured for silent token refresh.
      */
-    fun authenticator(): Authenticator = object : Authenticator {
-        override fun authenticate(route: Route?, response: Response): Request? {
-            if (response.countPriorResponses() >= MAX_RETRIES) return null
+    fun authenticator(): Authenticator =
+        object : Authenticator {
+            override fun authenticate(
+                route: Route?,
+                response: Response,
+            ): Request? {
+                if (response.countPriorResponses() >= MAX_RETRIES) return null
 
-            val refresher = config.tokenRefresher ?: return null
+                val refresher = config.tokenRefresher ?: return null
 
-            synchronized(this) {
-                return runBlocking {
-                    val currentTokens = sessionProvider.getTokens() ?: return@runBlocking null
-                    val accessToken = currentTokens.getAccessToken()?.value
+                synchronized(this) {
+                    return runBlocking {
+                        val currentTokens = sessionProvider.getTokens() ?: return@runBlocking null
+                        val accessToken = currentTokens.getAccessToken()?.value
 
-                    val requestToken = response.request.header("Authorization")?.removePrefix("Bearer ")
-                    if (accessToken != requestToken) {
-                        return@runBlocking response.request.newBuilder()
-                            .header("Authorization", "Bearer $accessToken")
-                            .build()
-                    }
-
-                    val result = refresher.refresh(currentTokens)
-                    val newTokens = result.getOrNull()
-
-                    if (newTokens != null) {
-                        sessionProvider.saveTokens(newTokens)
-                        val newAccessToken = newTokens.getAccessToken()?.value
-                        if (newAccessToken != null) {
-                            return@runBlocking response.request.newBuilder()
-                                .header("Authorization", "Bearer $newAccessToken")
+                        val requestToken = response.request.header("Authorization")?.removePrefix("Bearer ")
+                        if (accessToken != requestToken) {
+                            return@runBlocking response.request
+                                .newBuilder()
+                                .header("Authorization", "Bearer $accessToken")
                                 .build()
                         }
-                    } else {
-                        sessionProvider.clearSession()
+
+                        val result = refresher.refresh(currentTokens)
+                        val newTokens = result.getOrNull()
+
+                        if (newTokens != null) {
+                            sessionProvider.saveTokens(newTokens)
+                            val newAccessToken = newTokens.getAccessToken()?.value
+                            if (newAccessToken != null) {
+                                return@runBlocking response.request
+                                    .newBuilder()
+                                    .header("Authorization", "Bearer $newAccessToken")
+                                    .build()
+                            }
+                        } else {
+                            sessionProvider.clearSession()
+                        }
+                        null
                     }
-                    null
                 }
             }
         }
-    }
 
     private fun Response.countPriorResponses(): Int {
         var count = 0
@@ -121,11 +128,15 @@ class NetworkKit internal constructor(
     /**
      * Internal implementation of the [NetworkSessionProvider] that delegates to [SessionKit].
      */
-    private class DefaultSessionProvider(private val sessionKit: SessionKit) : NetworkSessionProvider {
+    private class DefaultSessionProvider(
+        private val sessionKit: SessionKit,
+    ) : NetworkSessionProvider {
         override suspend fun getTokens(): TokenHolder? = sessionKit.getTokens()
+
         override suspend fun saveTokens(tokens: TokenHolder) {
             sessionKit.extendSession(tokens)
         }
+
         override suspend fun clearSession() {
             sessionKit.endSession()
         }

@@ -16,9 +16,8 @@ import es.joshluq.foundationkit.storage.CacheStorageProvider
  * Manages the manual instantiation of all internal components.
  */
 internal class AuthKitComponent(
-    private val config: AuthKitConfig
+    private val config: AuthKitConfig,
 ) {
-
     val context by lazy { config.context }
 
     val logger: LoggerKit by lazy { config.logger }
@@ -41,7 +40,7 @@ internal class AuthKitComponent(
     val persistentStorage: StorageProvider by lazy {
         encryptionKit.createSecureStorage(
             dataStore = context.dataStore,
-            serializerProvider = serializer
+            serializerProvider = serializer,
         )
     }
 }

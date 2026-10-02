@@ -8,19 +8,17 @@ import es.joshluq.foundationkit.usecase.UseCase
 
 internal class ClearSessionUseCase(
     private val repository: TokenRepository,
-    private val logger: LoggerKit
+    private val logger: LoggerKit,
 ) : UseCase<NoneInput, NoneOutput> {
-
     companion object {
         private const val TAG = "ClearSessionUseCase"
     }
 
-    override suspend fun invoke(input: NoneInput): Result<NoneOutput> {
-        return runCatching {
+    override suspend fun invoke(input: NoneInput): Result<NoneOutput> =
+        runCatching {
             repository.clearAll()
             NoneOutput
         }.onFailure { throwable ->
             logger.e(TAG, "Error clearing session", throwable)
         }
-    }
 }

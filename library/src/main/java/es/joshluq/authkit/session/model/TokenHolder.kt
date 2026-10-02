@@ -5,7 +5,6 @@ package es.joshluq.authkit.session.model
  * Provides utility methods to access, modify, and query the tokens held within a session.
  */
 class TokenHolder {
-
     companion object Defaults {
         /**
          * Creates an empty [TokenHolder].
@@ -43,9 +42,9 @@ class TokenHolder {
          *
          * @return A [TokenHolder] with a predefined dummy token.
          */
-        fun withoutToken(): TokenHolder =
-            TokenHolder().apply { addToken(Token.Custom("withoutToken", "withoutToken")) }
+        fun withoutToken(): TokenHolder = TokenHolder().apply { addToken(Token.Custom("withoutToken", "withoutToken")) }
     }
+
     private val tokens: MutableMap<String, Token> = mutableMapOf()
 
     /**
@@ -84,11 +83,12 @@ class TokenHolder {
      * @param token The token to add.
      */
     fun addToken(token: Token) {
-        val key = when (token) {
-            is Token.Access -> "access"
-            is Token.Refresh -> "refresh"
-            is Token.Custom -> token.name
-        }
+        val key =
+            when (token) {
+                is Token.Access -> "access"
+                is Token.Refresh -> "refresh"
+                is Token.Custom -> token.name
+            }
         tokens[key] = token
     }
 

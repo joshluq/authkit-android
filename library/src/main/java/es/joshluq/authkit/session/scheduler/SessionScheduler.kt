@@ -9,7 +9,10 @@ internal interface SessionScheduler {
      * @param totalDuration Total session duration in milliseconds.
      * @param warningBefore Milliseconds before the end to trigger a warning.
      */
-    fun schedule(totalDuration: Long, warningBefore: Long? = null)
+    fun schedule(
+        totalDuration: Long,
+        warningBefore: Long? = null,
+    )
 
     /**
      * Cancels all scheduled tasks.

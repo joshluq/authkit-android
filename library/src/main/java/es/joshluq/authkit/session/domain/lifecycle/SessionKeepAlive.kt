@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong
 class SessionKeepAlive internal constructor(
     private val policy: InteractionPolicy,
     private val logger: LoggerKit,
-    private val timeProvider: () -> Long = { System.currentTimeMillis() }
+    private val timeProvider: () -> Long = { System.currentTimeMillis() },
 ) {
     private val lastNotificationTime = AtomicLong(0L)
 

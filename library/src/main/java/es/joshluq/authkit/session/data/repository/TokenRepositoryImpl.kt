@@ -15,9 +15,8 @@ import kotlinx.serialization.json.put
 
 internal class TokenRepositoryImpl(
     private val storage: StorageProvider,
-    private val logger: LoggerKit
+    private val logger: LoggerKit,
 ) : TokenRepository {
-
     companion object {
         private const val TAG = "TokenRepository"
         private const val TOKENS_KEY = "TOKENS_KEY"
@@ -29,11 +28,12 @@ internal class TokenRepositoryImpl(
         val jsonTokens: JsonObject = requireNotNull(storage.read(TOKENS_KEY)) { "No tokens found in storage" }
         return TokenHolder().apply {
             jsonTokens.forEach { (key, value) ->
-                val token = when (key) {
-                    "access" -> Token.Access(value.jsonPrimitive.content)
-                    "refresh" -> Token.Refresh(value.jsonPrimitive.content)
-                    else -> Token.Custom(key, value.jsonPrimitive.content)
-                }
+                val token =
+                    when (key) {
+                        "access" -> Token.Access(value.jsonPrimitive.content)
+                        "refresh" -> Token.Refresh(value.jsonPrimitive.content)
+                        else -> Token.Custom(key, value.jsonPrimitive.content)
+                    }
                 addToken(token)
             }
         }
@@ -41,15 +41,19 @@ internal class TokenRepositoryImpl(
 
     override suspend fun saveTokens(tokens: TokenHolder) {
         logger.d(TAG, "Saving tokens to storage")
-        val jsonToken = buildJsonObject {
-            tokens.getTokens().forEach { (key, token) ->
-                put(key, token.value)
+        val jsonToken =
+            buildJsonObject {
+                tokens.getTokens().forEach { (key, token) ->
+                    put(key, token.value)
+                }
             }
-        }
         storage.save(TOKENS_KEY, jsonToken)
     }
 
-    override suspend fun <T : SessionData> saveSessionData(data: T, clazz: Class<T>) {
+    override suspend fun <T : SessionData> saveSessionData(
+        data: T,
+        clazz: Class<T>,
+    ) {
         logger.d(TAG, "Saving session data: ${clazz.simpleName}")
         storage.save(SESSION_DATA_KEY, data, clazz)
     }

@@ -40,9 +40,8 @@ import kotlinx.coroutines.sync.withLock
  */
 class SessionKit internal constructor(
     config: SessionKitConfig,
-    private val componentFactory: ComponentFactory = SessionKitDefaults.factory
+    private val componentFactory: ComponentFactory = SessionKitDefaults.factory,
 ) : Manager<SessionKitConfig>() {
-
     companion object : AuthKitPlugin<SessionKitConfig, SessionKit> {
         private const val TAG = "SessionKit"
 
@@ -53,16 +52,18 @@ class SessionKit internal constructor(
          * @param config The configuration for the SessionKit.
          * @return An initialized [SessionKit] instance.
          */
-        override fun install(authKit: AuthKit, config: SessionKitConfig): SessionKit {
-            return SessionKit(config).apply {
+        override fun install(
+            authKit: AuthKit,
+            config: SessionKitConfig,
+        ): SessionKit =
+            SessionKit(config).apply {
                 initialize(
                     authKit.component.persistentStorage,
                     authKit.component.transientStorage,
                     authKit.component.context,
-                    authKit.component.logger
+                    authKit.component.logger,
                 )
             }
-        }
     }
 
     /**
@@ -106,21 +107,23 @@ class SessionKit internal constructor(
     private fun restoreSessionIfPossible() {
         sessionScope.launch {
             mutex.withLock {
-                component.getTokensUseCase(NoneInput).onSuccess { output ->
-                    if (!output.tokens.isEmpty()) {
-                        component.logger.i(TAG, "Active session detected during initialization. Restoring state.")
-                        _state.value = SessionState.Active
+                component
+                    .getTokensUseCase(NoneInput)
+                    .onSuccess { output ->
+                        if (!output.tokens.isEmpty()) {
+                            component.logger.i(TAG, "Active session detected during initialization. Restoring state.")
+                            _state.value = SessionState.Active
 
-                        if (config.expiration is ExpirationPolicy.Timed) {
-                            startTimerIfNeeded()
+                            if (config.expiration is ExpirationPolicy.Timed) {
+                                startTimerIfNeeded()
+                            }
+                        } else {
+                            _state.value = SessionState.Idle
                         }
-                    } else {
+                    }.onFailure {
+                        component.logger.e(TAG, "Failed to restore session: ${it.message}")
                         _state.value = SessionState.Idle
                     }
-                }.onFailure {
-                    component.logger.e(TAG, "Failed to restore session: ${it.message}")
-                    _state.value = SessionState.Idle
-                }
             }
         }
     }
@@ -180,13 +183,15 @@ class SessionKit internal constructor(
         mutex.withLock {
             component.logger.i(TAG, "Starting new session.")
             val input = SaveTokensUseCase.Input(tokens = tokens)
-            component.saveTokensUseCase(input).onSuccess {
-                startTimerIfNeeded()
-                _state.value = SessionState.Active
-            }.onFailure {
-                component.logger.e(TAG, "Failed to start session: ${it.message}")
-                _state.value = SessionState.Idle
-            }
+            component
+                .saveTokensUseCase(input)
+                .onSuccess {
+                    startTimerIfNeeded()
+                    _state.value = SessionState.Active
+                }.onFailure {
+                    component.logger.e(TAG, "Failed to start session: ${it.message}")
+                    _state.value = SessionState.Idle
+                }
         }
     }
 
@@ -195,16 +200,19 @@ class SessionKit internal constructor(
      */
     private fun startTimerIfNeeded() {
         when (val timerConfig = config.expiration) {
-            ExpirationPolicy.Never -> Unit
+            ExpirationPolicy.Never -> {
+                Unit
+            }
+
             is ExpirationPolicy.Timed -> {
                 component.logger.i(TAG, "Start Timer and Scheduler with duration: ${timerConfig.durationMillis}ms")
                 component.sessionTimer.start(
                     timerConfig.durationMillis,
-                    timerConfig.warningThresholdMillis
+                    timerConfig.warningThresholdMillis,
                 )
                 component.sessionScheduler.schedule(
                     timerConfig.durationMillis,
-                    timerConfig.warningThresholdMillis
+                    timerConfig.warningThresholdMillis,
                 )
             }
         }
@@ -236,7 +244,10 @@ class SessionKit internal constructor(
      */
     private fun endTimerIfNeeded() {
         when (config.expiration) {
-            ExpirationPolicy.Never -> Unit
+            ExpirationPolicy.Never -> {
+                Unit
+            }
+
             is ExpirationPolicy.Timed -> {
                 component.logger.i(TAG, "Stop Timer and Scheduler")
                 component.sessionTimer.stop()
@@ -258,12 +269,14 @@ class SessionKit internal constructor(
             }
             component.logger.i(TAG, "Extending session with new tokens.")
             val input = SaveTokensUseCase.Input(tokens = tokens)
-            component.saveTokensUseCase(input).onSuccess {
-                startTimerIfNeeded()
-                _state.value = SessionState.Active
-            }.onFailure {
-                component.logger.e(TAG, "Failed to extend session: ${it.message}")
-            }
+            component
+                .saveTokensUseCase(input)
+                .onSuccess {
+                    startTimerIfNeeded()
+                    _state.value = SessionState.Active
+                }.onFailure {
+                    component.logger.e(TAG, "Failed to extend session: ${it.message}")
+                }
         }
     }
 
@@ -278,7 +291,10 @@ class SessionKit internal constructor(
     }
 
     @PublishedApi
-    internal suspend fun <T : SessionData> saveSessionData(data: T, clazz: Class<T>) {
+    internal suspend fun <T : SessionData> saveSessionData(
+        data: T,
+        clazz: Class<T>,
+    ) {
         val input = SaveSessionDataUseCase.Input(data, clazz)
         component.saveSessionDataUseCase(input)
     }
@@ -288,9 +304,7 @@ class SessionKit internal constructor(
      *
      * @return The saved data, or null if not found.
      */
-    suspend inline fun <reified T : SessionData> getSessionData(): T? {
-        return getSessionData(T::class.java)
-    }
+    suspend inline fun <reified T : SessionData> getSessionData(): T? = getSessionData(T::class.java)
 
     @PublishedApi
     internal suspend fun <T : SessionData> getSessionData(clazz: Class<T>): T? {
@@ -305,9 +319,7 @@ class SessionKit internal constructor(
      *
      * @return The [TokenHolder] if a session exists and tokens are available, null otherwise.
      */
-    suspend fun getTokens(): TokenHolder? {
-        return component.getTokensUseCase(NoneInput).getOrNull()?.tokens
-    }
+    suspend fun getTokens(): TokenHolder? = component.getTokensUseCase(NoneInput).getOrNull()?.tokens
 
     /**
      * Returns the component used to keep the session alive by notifying user activity.
