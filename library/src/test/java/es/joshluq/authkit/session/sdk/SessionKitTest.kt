@@ -12,18 +12,17 @@ import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.usecase.NoneOutput
 import io.mockk.coEvery
 import io.mockk.every
+import es.joshluq.foundationkit.testing.coroutines.MainDispatcherRule
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -41,12 +40,11 @@ class SessionKitTest {
     private val sessionScheduler: SessionScheduler = mockk(relaxed = true)
     private val logger: LoggerKit = mockk(relaxed = true)
 
-    private val testDispatcher = UnconfinedTestDispatcher()
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule(UnconfinedTestDispatcher())
 
     @Before
     fun setUp() {
-        Dispatchers.setMain(testDispatcher)
-
         every { component.saveTokensUseCase } returns saveTokensUseCase
         every { component.clearSessionUseCase } returns clearSessionUseCase
         every { component.sessionTimer } returns sessionTimer
@@ -59,7 +57,6 @@ class SessionKitTest {
 
     @After
     fun tearDown() {
-        Dispatchers.resetMain()
         unmockkAll()
     }
 

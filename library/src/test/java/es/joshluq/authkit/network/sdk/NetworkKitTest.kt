@@ -133,12 +133,14 @@ class NetworkKitTest {
             coEvery { tokenRefresher.refresh(oldTokens) } returns Result.success(newTokens)
 
             val request =
-                Request.Builder()
+                Request
+                    .Builder()
                     .url("https://api.example.com/data")
                     .header("Authorization", "Bearer old_access_token")
                     .build()
             val response =
-                Response.Builder()
+                Response
+                    .Builder()
                     .request(request)
                     .protocol(Protocol.HTTP_1_1)
                     .code(401)
@@ -167,12 +169,14 @@ class NetworkKitTest {
             coEvery { tokenRefresher.refresh(oldTokens) } returns Result.failure(Exception("Refresh expired"))
 
             val request =
-                Request.Builder()
+                Request
+                    .Builder()
                     .url("https://api.example.com/data")
                     .header("Authorization", "Bearer expired_token")
                     .build()
             val response =
-                Response.Builder()
+                Response
+                    .Builder()
                     .request(request)
                     .protocol(Protocol.HTTP_1_1)
                     .code(401)

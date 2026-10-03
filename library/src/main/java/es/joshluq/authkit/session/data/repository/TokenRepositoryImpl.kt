@@ -4,7 +4,6 @@ import es.joshluq.authkit.session.domain.repository.TokenRepository
 import es.joshluq.authkit.session.model.SessionData
 import es.joshluq.authkit.session.model.Token
 import es.joshluq.authkit.session.model.TokenHolder
-import es.joshluq.encryptionkit.domain.model.SecureBytes
 import es.joshluq.foundationkit.log.LoggerKit
 import es.joshluq.foundationkit.provider.StorageProvider
 import es.joshluq.foundationkit.provider.read
@@ -45,10 +44,7 @@ internal class TokenRepositoryImpl(
         val jsonToken =
             buildJsonObject {
                 tokens.getTokens().forEach { (key, token) ->
-                    val secureBytes = SecureBytes(token.value.toByteArray())
-                    secureBytes.use {
-                        put(key, token.value)
-                    }
+                    put(key, token.value)
                 }
             }
         storage.save(TOKENS_KEY, jsonToken)

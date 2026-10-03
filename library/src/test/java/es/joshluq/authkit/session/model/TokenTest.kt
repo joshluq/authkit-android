@@ -52,11 +52,12 @@ class TokenTest {
 
     @Test
     fun `tokenHolder clear removes all tokens`() {
-        val holder = TokenHolder.withTokens(
-            Token.Access("access-token"),
-            Token.Refresh("refresh-token"),
-            Token.Custom("custom", "custom-token"),
-        )
+        val holder =
+            TokenHolder.withTokens(
+                Token.Access("access-token"),
+                Token.Refresh("refresh-token"),
+                Token.Custom("custom", "custom-token"),
+            )
 
         assertFalse(holder.isEmpty())
         assertTrue(holder.hasAccessToken())

@@ -28,6 +28,7 @@ dependencies {
     compileOnly("androidx.biometric:biometric:1.1.0")
     testImplementation("androidx.biometric:biometric:1.1.0")
     testImplementation(libs.okhttp)
+    testImplementation("es.joshluq.kit:foundationkit-testing:2.0.0-SNAPSHOT")
 }
 
 pluginkitQuality {

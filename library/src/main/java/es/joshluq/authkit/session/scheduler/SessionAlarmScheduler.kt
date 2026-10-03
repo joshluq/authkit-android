@@ -69,21 +69,19 @@ internal class SessionAlarmScheduler(
         }
 
     override fun cancelAll() {
-        val alarms =
-            listOf(
-                EXPIRATION_REQUEST_CODE to SessionAlarmReceiver.ACTION_SESSION_EXPIRATION,
-                WARNING_REQUEST_CODE to SessionAlarmReceiver.ACTION_SESSION_WARNING,
+        cancelAlarm(EXPIRATION_REQUEST_CODE, SessionAlarmReceiver.ACTION_SESSION_EXPIRATION)
+        cancelAlarm(WARNING_REQUEST_CODE, SessionAlarmReceiver.ACTION_SESSION_WARNING)
+    }
+
+    private fun cancelAlarm(requestCode: Int, action: String) {
+        val intent = Intent(context, SessionAlarmReceiver::class.java).apply { this.action = action }
+        val pendingIntent =
+            PendingIntent.getBroadcast(
+                context,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
             )
-        alarms.forEach { (code, action) ->
-            val intent = Intent(context, SessionAlarmReceiver::class.java).apply { this.action = action }
-            val pendingIntent =
-                PendingIntent.getBroadcast(
-                    context,
-                    code,
-                    intent,
-                    PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
-                )
-            pendingIntent?.let { alarmManager.cancel(it) }
-        }
+        pendingIntent?.let { alarmManager.cancel(it) }
     }
 }
