@@ -20,11 +20,14 @@ configure<LibraryExtension> {
 }
 
 dependencies {
-    implementation("es.joshluq.kit:foundationkit:1.4.0")
-    api("es.joshluq.kit:encryptionkit:1.4.1")
+    implementation("es.joshluq.kit:foundationkit:2.0.0-SNAPSHOT")
+    api("es.joshluq.kit:encryptionkit:1.5.0-SNAPSHOT")
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.okhttp)
+    compileOnly("androidx.biometric:biometric:1.1.0")
+    testImplementation("androidx.biometric:biometric:1.1.0")
+    testImplementation(libs.okhttp)
 }
 
 pluginkitQuality {

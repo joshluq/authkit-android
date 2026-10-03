@@ -13,6 +13,7 @@ import es.joshluq.foundationkit.manager.ManagerConfig
 class NetworkKitConfig internal constructor(
     val tokenRefresher: TokenRefresher? = null,
     val sessionProvider: NetworkSessionProvider? = null,
+    val enableDPoP: Boolean = false,
 ) : ManagerConfig {
     /**
      * Builder class for creating instances of [NetworkKitConfig].
@@ -24,6 +25,9 @@ class NetworkKitConfig internal constructor(
         /** The network session provider strategy. */
         var sessionProvider: NetworkSessionProvider? = null
 
+        /** Whether to attach cryptographic DPoP (RFC 9449) proof headers to requests. Defaults to false. */
+        var enableDPoP: Boolean = false
+
         /**
          * Builds the [NetworkKitConfig] instance.
          *
@@ -33,6 +37,7 @@ class NetworkKitConfig internal constructor(
             NetworkKitConfig(
                 tokenRefresher = tokenRefresher,
                 sessionProvider = sessionProvider,
+                enableDPoP = enableDPoP,
             )
     }
 

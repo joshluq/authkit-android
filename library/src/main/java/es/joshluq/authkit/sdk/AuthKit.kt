@@ -1,6 +1,7 @@
 package es.joshluq.authkit.sdk
 
 import android.content.Context
+import es.joshluq.authkit.biometric.sdk.BiometricKit
 import es.joshluq.authkit.di.AuthKitComponent
 import es.joshluq.authkit.di.AuthKitDefaults
 import es.joshluq.authkit.di.AuthKitLocator
@@ -17,7 +18,7 @@ import es.joshluq.foundationkit.manager.Manager
 class AuthKit private constructor(
     context: Context,
     private val storeName: String,
-    private val encryptionKit: EncryptionKit? = null,
+    private val customEncryptionKit: EncryptionKit? = null,
     private val logger: LoggerKit,
 ) : Manager<AuthKitConfig>() {
     val context: Context = context.applicationContext
@@ -45,7 +46,7 @@ class AuthKit private constructor(
             AuthKitConfig(
                 context = this.context,
                 storeName = storeName,
-                encryptionKit = encryptionKit,
+                encryptionKit = customEncryptionKit,
                 logger = logger,
             ),
         )
@@ -60,6 +61,34 @@ class AuthKit private constructor(
      */
     val session: SessionKit
         get() = plugin<SessionKit>() ?: error("Session plugin not installed")
+
+    /**
+     * Access to the biometric plugin instance.
+     * Throws an exception if the BiometricKit plugin has not been installed.
+     */
+    val biometric: BiometricKit
+        get() = plugin<BiometricKit>() ?: error("Biometric plugin not installed")
+
+    /**
+     * Access to the configured [EncryptionKit] instance.
+     */
+    val encryptionKit: EncryptionKit
+        get() = component.encryptionKit
+
+    /**
+     * Rotates the primary encryption key in the secure session store.
+     * Existing stored session data remains transparently readable using historic keys,
+     * while all subsequent write operations use the newly rotated primary key.
+     *
+     * @param newAlias Optional custom alias for the new primary key.
+     * @return [Result.success] if rotated, or [Result.failure] with exception.
+     */
+    suspend fun rotateSessionStore(newAlias: String? = null): Result<Unit> =
+        if (newAlias != null) {
+            encryptionKit.rotateKey(newAlias)
+        } else {
+            encryptionKit.rotateKey()
+        }
 
     /**
      * Returns the instance of the requested plugin type if it is installed.
@@ -124,7 +153,7 @@ class AuthKit private constructor(
                 AuthKit(
                     context = context,
                     storeName = storeName,
-                    encryptionKit = encryptionKit,
+                    customEncryptionKit = encryptionKit,
                     logger = logger,
                 )
             installers.forEach { it(authKit) }

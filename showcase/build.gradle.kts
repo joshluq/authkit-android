@@ -21,6 +21,7 @@ configure<ApplicationExtension> {
 
 dependencies {
     implementation(project(":authkit"))
-    implementation("es.joshluq.kit:foundationkit:1.3.0")
+    implementation("es.joshluq.kit:foundationkit:2.0.0-SNAPSHOT")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.biometric:biometric:1.1.0")
 }

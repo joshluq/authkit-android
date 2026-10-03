@@ -2,6 +2,8 @@ package es.joshluq.authkit.showcase
 
 import android.app.Application
 import android.util.Log
+import es.joshluq.authkit.biometric.sdk.BiometricKit
+import es.joshluq.authkit.biometric.sdk.BiometricKitConfig
 import es.joshluq.authkit.network.sdk.NetworkKit
 import es.joshluq.authkit.network.sdk.NetworkKitConfig
 import es.joshluq.authkit.network.sdk.TokenRefresher
@@ -39,10 +41,18 @@ class ShowcaseApp : Application() {
             storeName = "showcase_auth_store"
             addFeature(SessionKit, preset.toConfig())
 
+            addFeature(
+                BiometricKit,
+                BiometricKitConfig.build {
+                    keyAlias = "showcase_biometric_key"
+                },
+            )
+
             // Adding the Network Automation Plugin
             addFeature(
                 NetworkKit,
                 NetworkKitConfig.build {
+                    enableDPoP = true
                     tokenRefresher = object : TokenRefresher {
                         override suspend fun refresh(oldTokens: TokenHolder): Result<TokenHolder> {
                             // Mocking an API call to refresh tokens
