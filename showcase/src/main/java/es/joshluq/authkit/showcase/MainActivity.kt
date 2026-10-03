@@ -26,13 +26,8 @@ import es.joshluq.authkit.sdk.AuthKit
 import es.joshluq.authkit.session.model.ExpirationPolicy
 import es.joshluq.authkit.session.model.SessionData
 import es.joshluq.authkit.session.model.SessionState
-import es.joshluq.authkit.session.model.Token
-import es.joshluq.authkit.session.model.TokenHolder
 import es.joshluq.authkit.showcase.ui.theme.ShowcaseTheme
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import kotlin.time.Duration.Companion.milliseconds
 
 @Serializable
 data class UserProfile(
@@ -55,13 +50,15 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background,
                 ) {
                     if (app.isInitialized()) {
+                        val preset = app.configManager.getActivePreset()!!
+                        val viewModel = remember { SessionViewModel(app.authKit, preset) }
                         SessionScreen(
-                            authKit = app.authKit,
-                            preset = app.configManager.getActivePreset()!!,
+                            preset = preset,
                             onReset = {
                                 app.configManager.clearConfig()
                                 restartApp()
-                            }
+                            },
+                            viewModel = viewModel,
                         )
                     } else {
                         PresetSelectionScreen { preset ->
@@ -136,63 +133,16 @@ fun PresetSelectionScreen(onPresetSelected: (SessionPreset) -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionScreen(
-    authKit: AuthKit,
     preset: SessionPreset,
-    onReset: () -> Unit
+    onReset: () -> Unit,
+    viewModel: SessionViewModel,
 ) {
-    val state by authKit.session.state.collectAsStateWithLifecycle()
-    val scope = rememberCoroutineScope()
-
-    var userProfile by remember { mutableStateOf<UserProfile?>(null) }
-    var rotationStatus by remember { mutableStateOf<String?>(null) }
-    var biometricStatus by remember { mutableStateOf<String?>(null) }
-
-    // Load profile on start
-    LaunchedEffect(state) {
-        userProfile = if (state is SessionState.Active) {
-            authKit.session.getSessionData<UserProfile>()
-        } else {
-            null
-        }
-    }
-
-    // Visual demo timer
-    var secondsRemaining by remember { mutableIntStateOf(0) }
-    val isTimed = preset.expiration is ExpirationPolicy.Timed
-    val initialDuration = if (preset.expiration is ExpirationPolicy.Timed) {
-        (preset.expiration.durationMillis / 1000).toInt()
-    } else {
-        0
-    }
-
-    LaunchedEffect(state) {
-        if (!isTimed) {
-            secondsRemaining = 0
-            return@LaunchedEffect
-        }
-
-        when (state) {
-            is SessionState.Active -> {
-                secondsRemaining = initialDuration
-                while (secondsRemaining > 0) {
-                    delay(1000.milliseconds)
-                    secondsRemaining--
-                }
-            }
-            is SessionState.Idle -> {
-                secondsRemaining = 0
-            }
-            SessionState.ExpiringSoon -> {
-                secondsRemaining--
-                while (secondsRemaining > 0) {
-                    delay(1000.milliseconds)
-                    secondsRemaining--
-                }
-            }
-
-            else -> {}
-        }
-    }
+    val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val state = uiState.sessionState
+    val userProfile = uiState.userProfile
+    val rotationStatus = uiState.rotationStatus
+    val biometricStatus = uiState.biometricStatus
+    val isTimed = remember(preset) { preset.expiration is ExpirationPolicy.Timed }
 
     Scaffold(
         topBar = {
@@ -279,11 +229,7 @@ fun SessionScreen(
                     if (isTimed && state !is SessionState.Idle && state !is SessionState.Initializing) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(text = "Approx. time remaining:")
-                        Text(
-                            text = "${secondsRemaining}s",
-                            fontSize = 48.sp,
-                            fontWeight = FontWeight.ExtraBold
-                        )
+                        CountdownTimerDisplay(secondsRemaining = { uiState.secondsRemaining })
                     } else if (!isTimed && state is SessionState.Active) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(text = "✓ Persistent Session", fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
@@ -301,18 +247,15 @@ fun SessionScreen(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(text = "Session Payload:", fontWeight = FontWeight.Bold)
                         if (userProfile != null) {
-                            Text(text = "Name: ${userProfile?.name}")
-                            Text(text = "Email: ${userProfile?.email}")
+                            Text(text = "Name: ${userProfile.name}")
+                            Text(text = "Email: ${userProfile.email}")
                         } else {
                             Text(text = "No profile data saved.")
                             Button(
                                 onClick = {
-                                    scope.launch {
-                                        val profile =
-                                            UserProfile("Josh Luq", "josh@example.com", System.currentTimeMillis())
-                                        authKit.session.saveSessionData(profile)
-                                        userProfile = profile
-                                    }
+                                    val profile =
+                                        UserProfile("Josh Luq", "josh@example.com", System.currentTimeMillis())
+                                    viewModel.sendEvent(SessionUiEvent.SaveMockProfile(profile))
                                 },
                                 modifier = Modifier.padding(top = 8.dp)
                             ) {
@@ -327,15 +270,7 @@ fun SessionScreen(
 
             // Acciones
             Button(
-                onClick = {
-                    scope.launch {
-                        val tokens = TokenHolder().apply {
-                            addToken(Token.Access("mock_access_token"))
-                            addToken(Token.Refresh("mock_refresh_token"))
-                        }
-                        authKit.session.startSession(tokens)
-                    }
-                },
+                onClick = { viewModel.sendEvent(SessionUiEvent.StartSession) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state is SessionState.Idle
             ) {
@@ -350,15 +285,7 @@ fun SessionScreen(
 
             if (isTimed) {
                 Button(
-                    onClick = {
-                        scope.launch {
-                            val tokens = TokenHolder().apply {
-                                addToken(Token.Access("new_access_token_${System.currentTimeMillis()}"))
-                            }
-                            authKit.session.extendSession(tokens)
-                            secondsRemaining = initialDuration
-                        }
-                    },
+                    onClick = { viewModel.sendEvent(SessionUiEvent.ExtendSession) },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = state !is SessionState.Idle,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0277BD))
@@ -370,9 +297,7 @@ fun SessionScreen(
             }
 
             OutlinedButton(
-                onClick = {
-                    scope.launch { authKit.session.endSession() }
-                },
+                onClick = { viewModel.sendEvent(SessionUiEvent.EndSession) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state !is SessionState.Idle
             ) {
@@ -381,14 +306,9 @@ fun SessionScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            val keepAlive = remember { authKit.session.keepAlive() }
-
             if (isTimed) {
                 Button(
-                    onClick = {
-                        keepAlive.notifyActivity()
-                        secondsRemaining = initialDuration
-                    },
+                    onClick = { viewModel.sendEvent(SessionUiEvent.SimulateActivity) },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = state !is SessionState.Idle,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
@@ -413,16 +333,7 @@ fun SessionScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Button(
-                        onClick = {
-                            scope.launch {
-                                val result = authKit.rotateSessionStore()
-                                rotationStatus = if (result.isSuccess) {
-                                    "Session KeyStore rotated! Historic keys active."
-                                } else {
-                                    "Rotation error: ${result.exceptionOrNull()?.message}"
-                                }
-                            }
-                        },
+                        onClick = { viewModel.sendEvent(SessionUiEvent.RotateKeyStore) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
@@ -441,14 +352,7 @@ fun SessionScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Button(
-                        onClick = {
-                            try {
-                                val cryptoObject = authKit.biometric.createEncryptCryptoObject()
-                                biometricStatus = "Biometric CryptoObject ready: ${cryptoObject.cipher?.algorithm}"
-                            } catch (e: Exception) {
-                                biometricStatus = "Biometric info: ${e.message}"
-                            }
-                        },
+                        onClick = { viewModel.sendEvent(SessionUiEvent.TestBiometrics) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
                     ) {
@@ -467,4 +371,21 @@ fun SessionScreen(
             }
         }
     }
+}
+
+/**
+ * Leaf composable that isolates periodic 1-second countdown recompositions,
+ * preventing full SessionScreen re-evaluations.
+ */
+@Composable
+private fun CountdownTimerDisplay(
+    secondsRemaining: () -> Int,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = "${secondsRemaining()}s",
+        fontSize = 48.sp,
+        fontWeight = FontWeight.ExtraBold,
+        modifier = modifier,
+    )
 }

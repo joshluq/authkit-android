@@ -1,5 +1,6 @@
 package es.joshluq.authkit.network.sdk
 
+import android.annotation.SuppressLint
 import es.joshluq.authkit.di.AuthKitLocator
 import es.joshluq.authkit.sdk.AuthKit
 import es.joshluq.authkit.sdk.AuthKitPlugin
@@ -56,6 +57,7 @@ class NetworkKit internal constructor(
      *
      * @return The [Interceptor] configured for token injection.
      */
+    @SuppressLint("NewApi")
     fun interceptor(): Interceptor =
         Interceptor { chain ->
             val tokens = runBlocking { sessionProvider.getTokens() }
@@ -75,7 +77,10 @@ class NetworkKit internal constructor(
                 if (signature != null) {
                     val encoded =
                         runCatching {
-                            java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(signature)
+                            java.util.Base64
+                                .getUrlEncoder()
+                                .withoutPadding()
+                                .encodeToString(signature)
                         }.getOrElse {
                             android.util.Base64.encodeToString(
                                 signature,

@@ -38,7 +38,6 @@ class BiometricKitConfig internal constructor(
         /**
          * Inline DSL builder for [BiometricKitConfig].
          */
-        inline fun build(block: Builder.() -> Unit): BiometricKitConfig =
-            Builder().apply(block).build()
+        inline fun build(block: Builder.() -> Unit): BiometricKitConfig = Builder().apply(block).build()
     }
 }
