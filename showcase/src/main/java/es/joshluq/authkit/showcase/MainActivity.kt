@@ -9,6 +9,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -142,6 +144,8 @@ fun SessionScreen(
     val scope = rememberCoroutineScope()
 
     var userProfile by remember { mutableStateOf<UserProfile?>(null) }
+    var rotationStatus by remember { mutableStateOf<String?>(null) }
+    var biometricStatus by remember { mutableStateOf<String?>(null) }
 
     // Load profile on start
     LaunchedEffect(state) {
@@ -206,7 +210,8 @@ fun SessionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Card de Configuración Activa
@@ -389,6 +394,75 @@ fun SessionScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                 ) {
                     Text("Simulate Activity (Reset Timer)")
+                }
+            }
+
+            // Card de Seguridad y Criptografía Avanzada
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Advanced Security & Hardware Binding",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                val result = authKit.rotateSessionStore()
+                                rotationStatus = if (result.isSuccess) {
+                                    "Session KeyStore rotated! Historic keys active."
+                                } else {
+                                    "Rotation error: ${result.exceptionOrNull()?.message}"
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Text("Rotate Session KeyStore Key")
+                    }
+
+                    rotationStatus?.let {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = {
+                            try {
+                                val cryptoObject = authKit.biometric.createEncryptCryptoObject()
+                                biometricStatus = "Biometric CryptoObject ready: ${cryptoObject.cipher?.algorithm}"
+                            } catch (e: Exception) {
+                                biometricStatus = "Biometric info: ${e.message}"
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                    ) {
+                        Text("Test Biometric CryptoObject")
+                    }
+
+                    biometricStatus?.let {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }

@@ -5,6 +5,7 @@ import es.joshluq.authkit.sdk.AuthKit
 import es.joshluq.authkit.sdk.AuthKitPlugin
 import es.joshluq.authkit.session.model.TokenHolder
 import es.joshluq.authkit.session.sdk.SessionKit
+import es.joshluq.encryptionkit.sdk.EncryptionKit
 import es.joshluq.foundationkit.manager.Manager
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
@@ -19,9 +20,11 @@ import okhttp3.Route
  */
 class NetworkKit internal constructor(
     config: NetworkKitConfig,
+    private val encryptionKit: EncryptionKit? = null,
 ) : Manager<NetworkKitConfig>() {
     companion object : AuthKitPlugin<NetworkKitConfig, NetworkKit> {
         private const val MAX_RETRIES = 3
+        private const val MILLIS_PER_SECOND = 1000L
 
         /**
          * Installs the [NetworkKit] plugin into an [AuthKit] instance.
@@ -33,7 +36,7 @@ class NetworkKit internal constructor(
         override fun install(
             authKit: AuthKit,
             config: NetworkKitConfig,
-        ): NetworkKit = NetworkKit(config)
+        ): NetworkKit = NetworkKit(config, authKit.encryptionKit)
     }
 
     private val sessionProvider: NetworkSessionProvider by lazy {
@@ -49,6 +52,7 @@ class NetworkKit internal constructor(
     /**
      * Returns an OkHttp [Interceptor] that automatically adds the Authorization header
      * with the current Access Token to every outgoing request.
+     * If DPoP is enabled, also signs and attaches the DPoP proof header.
      *
      * @return The [Interceptor] configured for token injection.
      */
@@ -60,6 +64,28 @@ class NetworkKit internal constructor(
             val requestBuilder = chain.request().newBuilder()
             if (accessToken != null) {
                 requestBuilder.header("Authorization", "Bearer $accessToken")
+            }
+
+            if (config.enableDPoP && encryptionKit != null) {
+                val method = chain.request().method
+                val url = chain.request().url.toString()
+                val timestamp = System.currentTimeMillis() / MILLIS_PER_SECOND
+                val payload = "$method $url $timestamp".toByteArray()
+                val signature = runBlocking { encryptionKit.sign(payload).getOrNull() }
+                if (signature != null) {
+                    val encoded =
+                        runCatching {
+                            java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(signature)
+                        }.getOrElse {
+                            android.util.Base64.encodeToString(
+                                signature,
+                                android.util.Base64.URL_SAFE or
+                                    android.util.Base64.NO_WRAP or
+                                    android.util.Base64.NO_PADDING,
+                            )
+                        }
+                    requestBuilder.header("DPoP", encoded)
+                }
             }
 
             chain.proceed(requestBuilder.build())
