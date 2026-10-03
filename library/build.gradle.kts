@@ -25,8 +25,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)
     compileOnly(libs.okhttp)
-    compileOnly("androidx.biometric:biometric:1.1.0")
-    testImplementation("androidx.biometric:biometric:1.1.0")
+    compileOnly(libs.androidx.biometric)
+    testImplementation(libs.androidx.biometric)
     testImplementation(libs.okhttp)
     testImplementation("es.joshluq.kit:foundationkit-testing:2.0.0-SNAPSHOT")
 }
