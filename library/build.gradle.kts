@@ -20,15 +20,21 @@ configure<LibraryExtension> {
 }
 
 dependencies {
-    implementation("es.joshluq.kit:foundationkit:2.0.0-SNAPSHOT")
-    api("es.joshluq.kit:encryptionkit:1.5.0-SNAPSHOT")
+    implementation("es.joshluq.kit:foundationkit:2.0.0")
+    api("es.joshluq.kit:encryptionkit:1.5.0")
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)
+
+    // Optional provider dependencies (not bundled into SDK AAR)
     compileOnly(libs.okhttp)
     compileOnly(libs.androidx.biometric)
+
+    testImplementation("es.joshluq.kit:foundationkit-testing:2.0.0")
+
+    // Required for JVM unit tests (AGP does not inherit compileOnly in test classpath)
     testImplementation(libs.androidx.biometric)
     testImplementation(libs.okhttp)
-    testImplementation("es.joshluq.kit:foundationkit-testing:2.0.0-SNAPSHOT")
+
 }
 
 pluginkitQuality {
