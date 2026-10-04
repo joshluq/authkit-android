@@ -34,7 +34,6 @@ dependencies {
     // Required for JVM unit tests (AGP does not inherit compileOnly in test classpath)
     testImplementation(libs.androidx.biometric)
     testImplementation(libs.okhttp)
-
 }
 
 pluginkitQuality {

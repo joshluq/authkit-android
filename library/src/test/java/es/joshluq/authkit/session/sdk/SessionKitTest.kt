@@ -9,10 +9,10 @@ import es.joshluq.authkit.session.model.SessionState
 import es.joshluq.authkit.session.model.TokenHolder
 import es.joshluq.authkit.session.scheduler.SessionScheduler
 import es.joshluq.foundationkit.log.LoggerKit
+import es.joshluq.foundationkit.testing.coroutines.MainDispatcherRule
 import es.joshluq.foundationkit.usecase.NoneOutput
 import io.mockk.coEvery
 import io.mockk.every
-import es.joshluq.foundationkit.testing.coroutines.MainDispatcherRule
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import io.mockk.verify

@@ -73,7 +73,10 @@ internal class SessionAlarmScheduler(
         cancelAlarm(WARNING_REQUEST_CODE, SessionAlarmReceiver.ACTION_SESSION_WARNING)
     }
 
-    private fun cancelAlarm(requestCode: Int, action: String) {
+    private fun cancelAlarm(
+        requestCode: Int,
+        action: String,
+    ) {
         val intent = Intent(context, SessionAlarmReceiver::class.java).apply { this.action = action }
         val pendingIntent =
             PendingIntent.getBroadcast(
